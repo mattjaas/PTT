@@ -33,7 +33,9 @@ def add_defaults(parser: Parser):
 
     def parse_wrapper(raw_title, *args, **kwargs):
         cleaned = regex.sub(r'(?<=[\[\]])\s+', '', raw_title)
-        parser.context["_skip_languages_until_title"] = True  # Flaga kontrolna
+        if not hasattr(parser, "context"):
+            parser.context = {}
+        parser.context["_skip_languages_until_title"] = True
         return original_parse(cleaned, *args, **kwargs)
 
     parser.parse = parse_wrapper
