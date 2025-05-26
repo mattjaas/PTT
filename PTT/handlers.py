@@ -16,14 +16,24 @@ from PTT.transformers import (
     value,
 )
 
+def language_skip_if_before_title(transform_func):
+    def wrapper(context):
+        parser_context = context.get("parser").context if context.get("parser") else {}
+        if parser_context.get("_skip_languages_until_title"):
+            if context["key"] != "title":
+                return None  # Zignoruj język przed tytułem
+            else:
+                parser_context["_skip_languages_until_title"] = False
+        return transform_func(context)
+    return wrapper
 
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————
     original_parse = parser.parse
 
     def parse_wrapper(raw_title, *args, **kwargs):
-        # usuń spacje bezpośrednio po '[' lub ']'
         cleaned = regex.sub(r'(?<=[\[\]])\s+', '', raw_title)
+        parser.context["_skip_languages_until_title"] = True  # Flaga kontrolna
         return original_parse(cleaned, *args, **kwargs)
 
     parser.parse = parse_wrapper
@@ -497,9 +507,9 @@ def add_defaults(parser: Parser):
     parser.add_handler("languages", regex.compile(r"\blithuanian\b", regex.IGNORECASE), uniq_concat(value("lt")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\blatvian\b", regex.IGNORECASE), uniq_concat(value("lv")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bestonian\b", regex.IGNORECASE), uniq_concat(value("et")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
-    parser.add_handler("languages", regex.compile(r"\b(?:(?<!w{3}\.\w+\.)PL|pol)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"skipIfAlreadyFound": False})
-    parser.add_handler("languages", regex.compile(r"\b(polish|polon[eê]s|polaco)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
-    parser.add_handler("languages", regex.compile(r"\b(PLDUB|DUBPL|DubbingPL|LekPL|LektorPL)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"remove": True, "skipIfAlreadyFound": False})
+    parser.add_handler("languages", regex.compile(r"\b(?:(?<!w{3}\.\w+\.)PL|pol)\b", regex.IGNORECASE), language_skip_if_before_title(niq_concat(value("pl"))), {"skipIfAlreadyFound": False})
+    parser.add_handler("languages", regex.compile(r"\b(polish|polon[eê]s|polaco)\b", regex.IGNORECASE), language_skip_if_before_title(uniq_concat(value("pl"))), {"skipIfFirst": True, "skipIfAlreadyFound": False})
+    parser.add_handler("languages", regex.compile(r"\b(PLDUB|DUBPL|DubbingPL|LekPL|LektorPL)\b", regex.IGNORECASE), language_skip_if_before_title(uniq_concat(value("pl"))), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bCZ[EH]?\b", regex.IGNORECASE), uniq_concat(value("cs")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bczech\b", regex.IGNORECASE), uniq_concat(value("cs")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bslo(?:vak|vakian|subs|[\]_)]?\.\w{2,4}$)\b", regex.IGNORECASE), uniq_concat(value("sk")), {"skipFromTitle": True, "skipIfAlreadyFound": False})
