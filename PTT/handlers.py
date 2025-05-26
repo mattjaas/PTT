@@ -528,7 +528,7 @@ def add_defaults(parser: Parser):
     parser.add_handler("languages", regex.compile(r"\b(PLDUB|DUBPL|DubbingPL|LekPL|LektorPL|Lektor)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler(
         "languages",
-        regex.compile(r"(Polski Dubbing|Dubbing ?i ?napisy)", regex.IGNORECASE),
+        regex.compile(r"(Polski Dubbing|Dubbing ?i ?napisy|Dubbing ?DDP ?5.1 ?i ?Napisy|Dubbing ?5.1 ?i ?Napisy|Dubbing ?DDP ?i ?Napisy|Dubbing ?DD ?5.1 ?i ?Napisy)", regex.IGNORECASE),
         uniq_concat(value("pl")),
         {"remove": True, "skipIfAlreadyFound": False}
     )
