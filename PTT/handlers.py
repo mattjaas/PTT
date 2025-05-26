@@ -26,6 +26,16 @@ def language_skip_if_before_title(transform_func):
                 parser_context["_skip_languages_until_title"] = False
         return transform_func(context)
     return wrapper
+    
+def skip_languages_before_title(context):
+    parser = context.get("parser")
+    if parser and hasattr(parser, "context"):
+        if parser.context.get("_skip_languages_until_title"):
+            if context["key"] != "title":
+                return None  # ignoruj języki przed tytułem
+            else:
+                parser.context["_skip_languages_until_title"] = False
+    return None  # nie zmieniaj nic w wyniku – tylko steruj przepływem
 
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————
@@ -575,14 +585,6 @@ def add_defaults(parser: Parser):
                 result["languages"] = result.get("languages", []) + ["pt"]
 
         return None
-    def skip_languages_before_title(context):
-        parser_context = context.get("parser").context if hasattr(context.get("parser"), "context") else {}
-        if parser_context.get("_skip_languages_until_title"):
-            if context["key"] != "title":
-                return None
-            else:
-                parser_context["_skip_languages_until_title"] = False
-        return None  # nie zmienia nic, tylko decyduje czy kontynuować
 
     parser.add_handler("languages", infer_language_based_on_naming)
 
