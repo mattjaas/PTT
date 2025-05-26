@@ -19,11 +19,14 @@ from PTT.transformers import (
 
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————
-    # Zamieniamy wszystkie spacje następujące tuż po '[' lub ']' na pusty ciąg
     original_parse = parser.parse
-    parser.parse = lambda text: original_parse(
-        regex.sub(r'(?<=[\[\]])\s+', '', text)
-    )
+
+    def parse_wrapper(raw_title, *args, **kwargs):
+        # usuń spacje bezpośrednio po '[' lub ']'
+        cleaned = regex.sub(r'(?<=[\[\]])\s+', '', raw_title)
+        return original_parse(cleaned, *args, **kwargs)
+
+    parser.parse = parse_wrapper
     
     """
     Adds default handlers to the provided parser for various patterns such as episode codes, resolution,
