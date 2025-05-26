@@ -18,6 +18,13 @@ from PTT.transformers import (
 
 
 def add_defaults(parser: Parser):
+    # ———————— PREPROCESSOR ————————
+    # Zamieniamy wszystkie spacje następujące tuż po '[' lub ']' na pusty ciąg
+    original_parse = parser.parse
+    parser.parse = lambda text: original_parse(
+        regex.sub(r'(?<=[\[\]])\s+', '', text)
+    )
+    
     """
     Adds default handlers to the provided parser for various patterns such as episode codes, resolution,
     date formats, year ranges, etc. The handlers use regular expressions to match patterns and transformers
@@ -596,7 +603,7 @@ def add_defaults(parser: Parser):
     # Site
     parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|party|vip|nu|pics)\b", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
-    parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\]\s+", regex.IGNORECASE), value("$1"), {"remove": True})
+    parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
 
     # Networks
     parser.add_handler("network", regex.compile(r"\bATVP?\b", regex.IGNORECASE), value("Apple TV"), {"remove": True})
