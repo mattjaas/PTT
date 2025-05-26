@@ -526,6 +526,12 @@ def add_defaults(parser: Parser):
     parser.add_handler("languages", regex.compile(r"\bestonian\b", regex.IGNORECASE), uniq_concat(value("et")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\b(polish|polon[eê]s|polaco)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\b(PLDUB|DUBPL|DubbingPL|LekPL|LektorPL|Lektor)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"remove": True, "skipIfAlreadyFound": False})
+    parser.add_handler(
+        "languages",
+        regex.compile(r"(Polski Dubbing|Dubbing ?i ?napisy)", regex.IGNORECASE),
+        uniq_concat(value("pl")),
+        {"remove": True, "skipIfAlreadyFound": False}
+    )
     parser.add_handler("languages", regex.compile(r"\bCZ[EH]?\b", regex.IGNORECASE), uniq_concat(value("cs")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bczech\b", regex.IGNORECASE), uniq_concat(value("cs")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bslo(?:vak|vakian|subs|[\]_)]?\.\w{2,4}$)\b", regex.IGNORECASE), uniq_concat(value("sk")), {"skipFromTitle": True, "skipIfAlreadyFound": False})
@@ -633,7 +639,21 @@ def add_defaults(parser: Parser):
     parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
-    parser.add_handler("languages", regex.compile(r"\b(?<!napisy\s)(?:(?<!w{3}\.\w+\.)PL|pol)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"skipIfAlreadyFound": False})
+    parser.add_handler(
+        "languages",
+        regex.compile(
+            r"""\b(?!            # rozpocznij negatywne dopasowanie lookahead
+                (?:
+                    napisy[\s_]*             # "napisy" ze spacją lub "_"
+                    (?:google[\s_]+tłumacz|translator)?[\s_]* # opcjonalnie "google tłumacz" lub "translator"
+                )pl\b
+            )
+            (?:(?<!w{3}\.\w+\.)PL|pol)\b""",
+            regex.IGNORECASE | regex.VERBOSE
+        ),
+        uniq_concat(value("pl")),
+        {"skipIfAlreadyFound": False}
+    )
 
     # Networks
     parser.add_handler("network", regex.compile(r"\bATVP?\b", regex.IGNORECASE), value("Apple TV"), {"remove": True})
