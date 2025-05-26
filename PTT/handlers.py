@@ -73,7 +73,6 @@ def add_defaults(parser: Parser):
     parser.add_handler("site", regex.compile(r"^(www?[., ][\w-]+[. ][\w-]+(?:[. ][\w-]+)?)\s+-\s*", regex.IGNORECASE), options={"skipFromTitle": True, "remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("site", regex.compile(r"^((?:www?[\.,])?[\w-]+\.[\w-]+(?:\.[\w-]+)*?)\s+-\s*", regex.IGNORECASE), options={"skipIfAlreadyFound": False})
     parser.add_handler("site", regex.compile(r"\bwww.+rodeo\b", regex.IGNORECASE), lowercase, {"remove": True})
-    parser.add_handler("site", regex.compile(r"^\[\s*[\w\-]+\.(pl|com|net|org|ru|uk|es|fr|it|de|cz|sk|us|me)\s*\]\s*", regex.IGNORECASE), options={"remove": True})
 
     # Resolution
     parser.add_handler("resolution", regex.compile(r"\[?\]?3840x\d{4}[\])?]?", regex.IGNORECASE), value("2160p"), {"remove": True})
