@@ -507,7 +507,7 @@ def add_defaults(parser: Parser):
     parser.add_handler("languages", regex.compile(r"\blithuanian\b", regex.IGNORECASE), uniq_concat(value("lt")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\blatvian\b", regex.IGNORECASE), uniq_concat(value("lv")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bestonian\b", regex.IGNORECASE), uniq_concat(value("et")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
-    parser.add_handler("languages", regex.compile(r"\b(?:(?<!w{3}\.\w+\.)PL|pol)\b", regex.IGNORECASE), language_skip_if_before_title(niq_concat(value("pl"))), {"skipIfAlreadyFound": False})
+    parser.add_handler("languages", regex.compile(r"\b(?:(?<!w{3}\.\w+\.)PL|pol)\b", regex.IGNORECASE), language_skip_if_before_title(uniq_concat(value("pl"))), {"skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\b(polish|polon[eê]s|polaco)\b", regex.IGNORECASE), language_skip_if_before_title(uniq_concat(value("pl"))), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\b(PLDUB|DUBPL|DubbingPL|LekPL|LektorPL)\b", regex.IGNORECASE), language_skip_if_before_title(uniq_concat(value("pl"))), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bCZ[EH]?\b", regex.IGNORECASE), uniq_concat(value("cs")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
