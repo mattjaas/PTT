@@ -29,14 +29,13 @@ def language_skip_if_before_title(transform_func):
     
 def skip_languages_before_title(context):
     parser = context.get("parser")
-    match_index = context.get("match_index", 0)
+    matched = context.get("matched", {})
+    key = context.get("key")
 
     if parser and hasattr(parser, "context"):
-        if parser.context.get("_skip_languages_until_title"):
-            if context["key"] != "title":
-                if match_index < 10:
-                    # 🚫 To jest KLUCZOWE: zwracasz informację, żeby pominąć to dopasowanie
-                    return {"skip": True}
+        if parser.context.get("_skip_languages_until_title", True):
+            if key != "title":
+                return {"skip": True}
             else:
                 parser.context["_skip_languages_until_title"] = False
     return None
