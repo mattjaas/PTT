@@ -642,19 +642,22 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "languages",
         regex.compile(
-            r"""\b(?!                    # nie chcemy:
-                (?:
-                    napisy[\s_]*             #   „napisy…PL”
-                    (?:google[\s_]+tłumacz|translator)?[\s_]*PL
-                  |
-                    Sub\s+Eng[-\s]?PL        #   „Sub Eng-PL” lub „Sub Eng PL”
-                )\b
+            r"""\b(?!            # rozpocznij negatywne dopasowanie lookahead
+                (?:              # grupa dla alternatywnych prefiksów
+                    (?:          # Istniejący prefiks dla "napisy..."
+                        napisy[\s_]*             # "napisy" ze spacją lub "_"
+                        (?:google[\s_]+tłumacz|translator)?[\s_]* # opcjonalnie "google tłumacz" lub "translator"
+                    )
+                    |            # LUB
+                    (?:          # Nowy prefiks dla "Sub Eng..."
+                        Sub[\s_]+Eng(?:-|[\s_]+) # dopasowuje "Sub Eng-" lub "Sub Eng " (oraz warianty z _ lub wieloma sp.)
+                    )
+                )pl\b            # wszystkie wykluczone frazy kończą się na "pl" (ignorując wielkość liter)
             )
-            (?:(?<!w{3}\.\w+\.)PL|pol)\b   # dopasuj normalne „PL” lub „pol”
-            """,
+            (?:(?<!w{3}\.\w+\.)PL|pol)\b""",  # Główny wzorzec dopasowania pozostaje taki sam
             regex.IGNORECASE | regex.VERBOSE
         ),
-        uniq_concat(value("pl")),
+        uniq_concat(value("pl")), # Te funkcje są zdefiniowane w kodzie użytkownika
         {"skipIfAlreadyFound": False}
     )
 
