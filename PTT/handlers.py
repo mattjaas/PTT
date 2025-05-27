@@ -89,8 +89,22 @@ def add_defaults(parser: Parser):
         parser.context["_skip_languages_until_title"] = True
         return original_parse(cleaned, *args, **kwargs)
 
+    parser.add_handler(
+        "debug",
+        regex.compile(r".*"),
+        lambda matched: print("[DEBUG]", matched),
+        {"remove": False}
+    )
+    
     parser.parse = parse_wrapper
 
+    parser.add_handler(
+        "debug",
+        regex.compile(r".*"),
+        lambda matched: print("[DEBUG]", matched),
+        {"remove": False}
+    )
+    
     """
     Adds default handlers to the provided parser for various patterns such as episode codes, resolution,
     date formats, year ranges, etc. The handlers use regular expressions to match patterns and transformers
