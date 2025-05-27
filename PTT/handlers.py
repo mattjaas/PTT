@@ -639,41 +639,7 @@ def add_defaults(parser: Parser):
     parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
-    P_NAPISY_STR = r"napisy[\s_]*(?:google[\s_]+tłumacz|translator)?[\s_]*"
-    P_SUB_ENG_STR = r"Sub[\s_]+Eng(?:-|[\s_]+)"
-    
-    parser.add_handler(
-        "languages",
-        regex.compile(
-            fr"""
-            \b  # Granica słowa na początku
-            (?:
-                # Gałąź dla "PL" (z IGNORECASE). Ma specjalne wykluczenie www.
-                (?<! 
-                    (?:
-                        w{{3}}\.\w+\. |  # Wykluczenie dla www. (np. www.site.PL)
-                        {P_NAPISY_STR} | # Wykluczenie dla "napisy..." (np. napisy PL)
-                        {P_SUB_ENG_STR}  # Wykluczenie dla "Sub Eng..." (np. Sub Eng-PL)
-                    )
-                )
-                PL 
-                |
-                # Gałąź dla "pol" (z IGNORECASE). Nie ma wykluczenia www.
-                (?<! 
-                    (?:
-                        {P_NAPISY_STR} | # Wykluczenie dla "napisy..." (np. napisy pol)
-                        {P_SUB_ENG_STR}  # Wykluczenie dla "Sub Eng..." (np. Sub Eng-pol)
-                    )
-                )
-                pol
-            )
-            \b  # Granica słowa na końcu
-            """,
-            regex.IGNORECASE | regex.VERBOSE
-        ),
-        uniq_concat(value("pl")), # Te funkcje są zdefiniowane w kodzie użytkownika
-        {"skipIfAlreadyFound": False}
-    )
+
 
 
     # Networks
