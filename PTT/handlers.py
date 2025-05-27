@@ -647,7 +647,7 @@ def add_defaults(parser: Parser):
                     napisy[\s_]*             # "napisy" ze spacją lub "_"
                     (?:google[\s_]+tłumacz|translator)?[\s_]*  # opcjonalnie "google tłumacz" lub "translator"
                     |                       # dodatkowy wyjątek:
-                    Sub\s+Eng-              #   "Sub Eng-PL"
+                    sub[\s_]*(?:eng-)?[\s_]*              #   "Sub Eng-PL"
                 )pl\b
             )
             (?:(?<!w{3}\.\w+\.)PL|pol)\b""",
