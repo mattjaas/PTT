@@ -688,9 +688,10 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "languages",
         regex.compile(
-            r"""(?<!(?:napisy[\s_]*
-                        (?:google[\s_]+tłumacz|translator)?  # opcjonalny „google tłumacz” lub „translator”
-                        [\s_]*
+            r"""(?<!(?:napisy[\s._|/-]*                # „napisy” z dowolnym separatorem
+                        (?:google[\s._|/-]+tłumacz     # „google tłumacz” z dowolnym separatorem
+                        |translator)                   # lub samo „translator”
+                        [\s._|/-]*
                     ))
                 \b(?:PL|pol)\b
             """,
