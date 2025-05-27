@@ -164,7 +164,7 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "trash",
         regex.compile(
-            r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|plsub|plsubbed|subbedpl)\b",
+            r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|plsub|sub.pl|plsubbed|subbedpl)\b",
             regex.IGNORECASE
         ),
         boolean,
