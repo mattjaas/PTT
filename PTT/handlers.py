@@ -18,36 +18,34 @@ from PTT.transformers import (
 def handle_site_before_title(context):
     text = context["title"]
 
-    # 1) [domena.pl] albo [domena.com.pl] na początku
+    # wzorzec całej domeny z pl/com.pl, www. i wieloma poddomenami
+    domain_pattern = (
+        r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
+        r'(?:\.(?:com\.)?pl|[\s-]pl)'
+    )
+
+    # 1) Bracketed: [domena.pl]  lub  {domena.com.pl}  albo  (domena pl)
     m = regex.search(
-        r'^[\(\[\{]\s*'
-        r'('
-          r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'   # opcjonalne www. + jeden lub więcej segmentów
-          r'(?:\.(?:com\.)?pl)'             # końcówka .pl lub .com.pl
-        r')'
-        r'\s*[\)\]\}]',
+        rf'^[\(\[\{{]\s*'
+        rf'({domain_pattern})'
+        rf'\s*[\)\]\}}]\s*',    # zamknięcie nawiasu + ewentualne spacje
         text,
         regex.IGNORECASE
     )
 
-    # 2) jeżeli brak nawiasów, to domena.pl- lub domena.com.pl - na początku
+    # 2) Bez nawiasu, ale natychmiast potem '-' lub ' -'
     if not m:
         m = regex.search(
-            r'^'
-            r'('
-              r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
-              r'(?:\.(?:com\.)?pl)'
-            r')'
-            r'(?=(?:-| -))',
+            rf'^({domain_pattern})\s*-\s*',
             text,
             regex.IGNORECASE
         )
         if not m:
             return None
 
-    raw        = m.group(0)   # np. "[www.Audio.PL]" albo "strona.jakas.pl -"
-    site_start = m.start()    # zawsze będzie 0
-    val        = m.group(1)   # np. "www.Audio.PL" lub "strona.jakas.pl"
+    raw        = m.group(0)        # np. "[Audio PL] " lub "best-torrents pl - "
+    site_start = m.start()         # powinno być 0
+    val        = m.group(1).strip()  # np. "Audio PL" lub "best-torrents pl"
 
     return {
         "raw_match": raw,
