@@ -18,26 +18,36 @@ from PTT.transformers import (
 def handle_site_before_title(context):
     text = context["title"]
 
-    # 1) najpierw próbujemy złapać [something.pl], {…pl} lub (…pl) na początku
+    # 1) [domena.pl] albo [domena.com.pl] na początku
     m = regex.search(
-        r'^[\(\[\{]\s*([\w-]+(?:[.\s-]pl))\s*[\)\]\}]',
+        r'^[\(\[\{]\s*'
+        r'('
+          r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'   # opcjonalne www. + jeden lub więcej segmentów
+          r'(?:\.(?:com\.)?pl)'             # końcówka .pl lub .com.pl
+        r')'
+        r'\s*[\)\]\}]',
         text,
         regex.IGNORECASE
     )
 
-    # 2) jeśli nie ma nawiasów, szukamy „domain.pl-” lub „domain.pl -” na początku
+    # 2) jeżeli brak nawiasów, to domena.pl- lub domena.com.pl - na początku
     if not m:
         m = regex.search(
-            r'^([\w-]+(?:[.\s-]pl))(?=(?:-| -))',
+            r'^'
+            r'('
+              r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
+              r'(?:\.(?:com\.)?pl)'
+            r')'
+            r'(?=(?:-| -))',
             text,
             regex.IGNORECASE
         )
         if not m:
             return None
 
-    raw        = m.group(0)  # całość, np. "[Audio PL]" lub "Audio.PL-"
-    site_start = m.start()   # zawsze 0 albo ewentualnie 1 (gdy np. spacja przed nawiasem)
-    val        = m.group(1)  # samo "Audio.PL"
+    raw        = m.group(0)   # np. "[www.Audio.PL]" albo "strona.jakas.pl -"
+    site_start = m.start()    # zawsze będzie 0
+    val        = m.group(1)   # np. "www.Audio.PL" lub "strona.jakas.pl"
 
     return {
         "raw_match": raw,
@@ -45,17 +55,6 @@ def handle_site_before_title(context):
         "remove": True,
         "value": val
     }
-
-    title_idx = title_match["match_index"]
-
-    # 3) Jeśli .pl stoi przed tytułem → traktuj jako site
-    if site_start < title_idx:
-        return {
-            "raw_match": raw,
-            "match_index": site_start,
-            "remove": True,
-            "value": val
-        }
 
 
 def add_defaults(parser: Parser):
@@ -659,7 +658,7 @@ def add_defaults(parser: Parser):
 
     # Site
     parser.add_handler("site", handle_site_before_title)
-    parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|party|vip|nu|pics|com pl|com.pl)\b", regex.IGNORECASE), value("$1"), {"remove": True})
+    parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|party|vip|nu|pics)\b", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler(
