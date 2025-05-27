@@ -667,17 +667,17 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "site",
         regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE),
-        skip_site_if_after_title
+        function=skip_site_if_after_title
     )
     parser.add_handler(
         "site",
         regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE),
-        skip_site_if_after_title
+        function=skip_site_if_after_title
     )
     parser.add_handler(
         "site",
         regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE),
-        skip_site_if_after_title
+        function=skip_site_if_after_title
     )
     parser.add_handler(
         "debug",
