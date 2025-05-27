@@ -18,11 +18,10 @@ from PTT.transformers import (
 
 def handle_site_before_title(context):
     text = context["title"]
-    # 1) znajdź pierwszą domenę pasującą do wzorca
+    # szukamy pierwszej domeny
     m = regex.search(
-        r"\b(?:www?\.)?([\w-]+\.(?:pl))(?=[\s.-]|$)",
-        text,
-        regex.IGNORECASE
+        r"(?:www\.)?([\w-]+(?:[.\s-]pl))",
+        text, regex.IGNORECASE
     )
     if not m:
         return None
@@ -31,11 +30,11 @@ def handle_site_before_title(context):
     raw        = m.group(0)
     val        = m.group(1)
 
-    # 2) odczytaj, czy parser już dopasował tytuł
+    # odczytujemy, czy i gdzie wykryto już 'title'
     title_match = context.get("matched", {}).get("title")
     title_idx   = title_match["match_index"] if title_match else len(text) + 1
 
-    # 3) zaakceptuj tylko jeśli domena stoi przed tytułem
+    # tylko jeśli domena stoi przed tytułem
     if site_start < title_idx:
         return {
             "raw_match": raw,
@@ -43,7 +42,6 @@ def handle_site_before_title(context):
             "remove": True,
             "value": val
         }
-
     return None
 
 def add_defaults(parser: Parser):
