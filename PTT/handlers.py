@@ -732,5 +732,5 @@ def add_defaults(parser: Parser):
         "debug",
         regex.compile(r".*"),
         lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
+        {"remove": True}
     )
