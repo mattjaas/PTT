@@ -43,8 +43,8 @@ def handle_site_before_title(context):
 
     # wzorzec całej domeny z pl/com.pl, www. i wieloma poddomenami
     domain_pattern = (
-        r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
-        r'(?:\.(?:com\.)?pl|\.pl|[\s-]pl)(?![\w])'
+        r'(?:www\.)?[\w_-]+(?:\.[\w_-]+)*'
+        r'(?:\.(?:com\.)?pl|[\s_-]pl)'
     )
 
     # 1) Bracketed: [domena.pl]  lub  {domena.com.pl}  albo  (domena pl)
