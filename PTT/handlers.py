@@ -27,6 +27,14 @@ def language_skip_if_before_title(transform_func):
         return transform_func(context)
     return wrapper
     
+def skip_if_after_title(transform_func):
+    def wrapper(context):
+        parser_context = context.get("parser").context if context.get("parser") else {}
+        if parser_context.get("_skip_languages_until_title") is False:
+            return None  # Już po tytule – pomiń ten handler
+        return transform_func(context)
+    return wrapper
+    
 def skip_languages_before_title(context):
     parser = context.get("parser")
     matched = context.get("matched", {})
@@ -642,9 +650,24 @@ def add_defaults(parser: Parser):
     parser.add_handler("size", regex.compile(r"\b(\d+(\.\d+)?\s?(MB|GB|TB))\b", regex.IGNORECASE), none, {"remove": True})
 
     # Site
-    parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE), value("$1"), {"remove": True})
-    parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
-    parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
+    parser.add_handler(
+        "site",
+        regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE),
+        skip_if_after_title(value("$1")),
+        {"remove": True}
+    )
+    parser.add_handler(
+        "site",
+        regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE),
+        skip_if_after_title(value("$1")),
+        {"remove": True}
+    )
+    parser.add_handler(
+        "site",
+        regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE),
+        skip_if_after_title(value("$1")),
+        {"remove": True}
+    )
     parser.add_handler(
         "debug",
         regex.compile(r".*"),
