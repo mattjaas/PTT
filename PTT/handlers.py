@@ -15,6 +15,25 @@ from PTT.transformers import (
     uppercase,
     value,
 )
+def handle_trash_after_markers(context):
+    title = context["title"]
+    # wzorzec: dokładnie 3 dowolne znaki z zestawu - _ | [ ] { } ( ) .
+    marker_pattern = r"[-_\|\[\]\{\}\(\)\.]{3}"
+    # znajdź wszystkie dopasowania
+    matches = list(regex.finditer(marker_pattern, title))
+    if not matches:
+        return None
+    # weź ostatnie wystąpienie
+    last = matches[-1]
+    start = last.start()
+    # usuń wszystko od tego miejsca
+    raw = title[start:]
+    return {
+        "raw_match": raw,
+        "match_index": start,
+        "remove": True
+    }
+
 def handle_site_before_title(context):
     text = context["title"]
 
@@ -728,12 +747,7 @@ def add_defaults(parser: Parser):
         {"remove": True}
     )
     parser.add_handler("title", regex.compile(r"\bHigh.?Quality\b", regex.IGNORECASE), none, {"remove": True, "skipFromTitle": True})
-    parser.add_handler(
-        "trash",
-        regex.compile(r".*"),
-        none,
-        {"remove": True}
-    )
+    parser.add_handler("trash", handle_trash_after_markers)
     parser.add_handler(
         "debug",
         regex.compile(r".*"),
