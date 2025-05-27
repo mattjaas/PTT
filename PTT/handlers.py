@@ -125,6 +125,12 @@ def add_defaults(parser: Parser):
     # Trash (Equivalent to RTN auto-trasher) - DO NOT REMOVE HERE!
     # This one is pretty strict, but it removes a lot of the garbage
     # parser.add_handler("trash", regex.compile(r"\b(\w+rip|hc|((h[dq]|clean)(.+)?)?cam.?(rip|rp)?|(h[dq])?(ts|tc)(?:\d{3,4})?|tele(sync|cine)?|\d+[0o]+([mg]b)|\d{3,4}tc)\b"), boolean, {"remove": False})
+    parser.add_handler(
+        "trash",
+        regex.compile(r"\bsub[ _.-]?eng[ _.-]?pl\b|\bsub[ _.-]?pl\b", regex.IGNORECASE),
+        boolean,
+        {"remove": True}
+    )
     parser.add_handler("trash", regex.compile(r"\b(?:H[DQ][ .-]*)?CAM(?!.?(S|E|\()\d+)(?:H[DQ])?(?:[ .-]*Rip|Rp)?\b", regex.IGNORECASE), boolean, {"remove": False})
     parser.add_handler("trash", regex.compile(r"\b(?:H[DQ][ .-]*)?S[ \.\-]print\b", regex.IGNORECASE), boolean, {"remove": False})
     parser.add_handler("trash", regex.compile(r"\b(?:HD[ .-]*)?T(?:ELE)?(C|S)(?:INE|YNC)?(?:Rip)?\b", regex.IGNORECASE), boolean, {"remove": False})
@@ -454,12 +460,6 @@ def add_defaults(parser: Parser):
     parser.add_handler("country", regex.compile(r"\b(US|UK|AU|NZ|CA)\b"), value("$1"))
 
     # Languages (ISO 639-1 Standardized)
-    parser.add_handler(
-        "languages",
-        regex.compile(r"\bsub[ _.-]?eng[ _.-]?pl\b|\bsub[ _.-]?pl\b", regex.IGNORECASE),
-        none,
-        {"remove": True}
-    )
     parser.add_handler("languages", regex.compile(r"\bengl?(?:sub[A-Z]*)?\b", regex.IGNORECASE), uniq_concat(value("en")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\beng?sub[A-Z]*\b", regex.IGNORECASE), uniq_concat(value("en")), {"skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bing(?:l[eéê]s)?\b", regex.IGNORECASE), uniq_concat(value("en")), {"skipIfAlreadyFound": False})
