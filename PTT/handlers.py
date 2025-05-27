@@ -18,23 +18,29 @@ from PTT.transformers import (
 
 def handle_site_before_title(context):
     text = context["title"]
-    # szukamy pierwszej domeny
+
+    # 1) Znajdź pierwsze wystąpienie *.pl gdziekolwiek w tekście
     m = regex.search(
         r"(?:www\.)?([\w-]+(?:[.\s-]pl))",
-        text, regex.IGNORECASE
+        text,
+        regex.IGNORECASE
     )
     if not m:
         return None
 
-    site_start = m.start()
-    raw        = m.group(0)
-    val        = m.group(1)
+    site_start = m.start()      # pozycja początku raw_match
+    raw        = m.group(0)     # np. "Audio.PL"
+    val        = m.group(1)     # np. "Audio.PL"
 
-    # odczytujemy, czy i gdzie wykryto już 'title'
+    # 2) Sprawdź, czy tytuł już wcześniej został wykryty
     title_match = context.get("matched", {}).get("title")
-    title_idx   = title_match["match_index"] if title_match else len(text) + 1
+    if not title_match:
+        # nie ma jeszcze tytułu → pomijamy to .pl
+        return None
 
-    # tylko jeśli domena stoi przed tytułem
+    title_idx = title_match["match_index"]
+
+    # 3) Jeśli .pl stoi przed tytułem → traktuj jako site
     if site_start < title_idx:
         return {
             "raw_match": raw,
@@ -42,7 +48,7 @@ def handle_site_before_title(context):
             "remove": True,
             "value": val
         }
-    return None
+
 
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————
