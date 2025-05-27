@@ -674,19 +674,22 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "site",
         regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE),
-        site_transformer_factory(parser)
+        site_transformer_factory(parser),
+        {"useMatchObject": True}
     )
     
     parser.add_handler(
         "site",
         regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE),
-        site_transformer_factory(parser)
+        site_transformer_factory(parser),
+        {"useMatchObject": True}
     )
     
     parser.add_handler(
         "site",
         regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE),
-         site_transformer_factory(parser)
+        site_transformer_factory(parser),
+        {"useMatchObject": True}
     )
     parser.add_handler(
         "debug",
