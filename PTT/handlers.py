@@ -700,7 +700,7 @@ def add_defaults(parser: Parser):
             regex.IGNORECASE | regex.VERBOSE
         ),
         uniq_concat(value("pl")),
-        {"skipIfAlreadyFound": False}
+        {"remove": True, "skipIfAlreadyFound": False}
     )
 
 
