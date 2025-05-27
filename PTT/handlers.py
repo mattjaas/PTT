@@ -18,34 +18,38 @@ from PTT.transformers import (
 def handle_site_before_title(context):
     text = context["title"]
 
-    # wzorzec całej domeny z pl/com.pl, www. i wieloma poddomenami
+    # 1) definicja "poprawnej" domeny .pl / .com.pl z opcjonalnym www. i subdomenami
     domain_pattern = (
-        r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
-        r'(?:\.(?:com\.)?pl|[\s-]pl)'
+        r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'   # www. + dowolne poddomeny
+        r'\.(?:com\.)?pl'                  # końcówka .pl lub .com.pl
+        r'(?![\w-])'                       # upewniamy się, że po pl nie idzie litera/cyfra/hyphen
     )
 
-    # 1) Bracketed: [domena.pl]  lub  {domena.com.pl}  albo  (domena pl)
+    # 2) najpierw próbujemy dopasować [domena]␣ albo (domena) -␣ lub {domena}␣
     m = regex.search(
-        rf'^[\(\[\{{]\s*'
-        rf'({domain_pattern})'
-        rf'\s*[\)\]\}}]\s*',    # zamknięcie nawiasu + ewentualne spacje
+        rf'[\(\[\{{]\s*'       # otwierający nawias
+        rf'({domain_pattern})' # grupa 1 = sama domena
+        rf'\s*[\)\]\}}]'       # zamykający nawias
+        rf'(?=\s*(?:-\s*|\s+))',  # zaraz po nim albo spacja, albo myślnik (z opcjonalnymi spacjami)
         text,
         regex.IGNORECASE
     )
-
-    # 2) Bez nawiasu, ale natychmiast potem '-' lub ' -'
-    if not m:
+    # jeżeli albo nic nie znalazło, albo znalazło ale nie na początku → spróbuj drugą ścieżkę
+    if not m or m.start() != 0:
+        # 3) bez nawiasu, ale domena musi być **na początku** i tuż przed '-' lub ' -'
         m = regex.search(
-            rf'^({domain_pattern})\s*-\s*',
+            rf'({domain_pattern})'   # grupa 1 = domena
+            rf'(?=\s*-\s*)',         # natychmiast potem myślnik z opcjonalnymi spacjami
             text,
             regex.IGNORECASE
         )
-        if not m:
+        if not m or m.start() != 0:
             return None
 
-    raw        = m.group(0)        # np. "[Audio PL] " lub "best-torrents pl - "
-    site_start = m.start()         # powinno być 0
-    val        = m.group(1).strip()  # np. "Audio PL" lub "best-torrents pl"
+    # 4) Wyciągamy raw_match i właściwą wartość
+    raw        = m.group(0)        # np. "[strona.jakas.pl] " albo "strona.jakas.pl - "
+    site_start = m.start()         # zawsze 0
+    val        = m.group(1)        # np. "strona.jakas.pl"
 
     return {
         "raw_match": raw,
