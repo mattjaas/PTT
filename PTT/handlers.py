@@ -28,8 +28,6 @@ def add_defaults(parser: Parser):
         return original_parse(cleaned, *args, **kwargs)
 
     parser.parse = parse_wrapper
-
-    parser.add_handler("languages", skip_languages_before_title)
     
     """
     Adds default handlers to the provided parser for various patterns such as episode codes, resolution,
