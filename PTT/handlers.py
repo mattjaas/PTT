@@ -59,7 +59,7 @@ def handle_site_before_title(context):
     # 2) Bez nawiasu, ale natychmiast potem '-' lub ' -'
     if not m:
         m = regex.search(
-            rf'^({domain_pattern})(?!_)\s*[-–—]\s*',
+            rf'^({domain_pattern})\s*[-_]\s*',
             text,
             regex.IGNORECASE
         )
