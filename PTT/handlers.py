@@ -15,22 +15,26 @@ from PTT.transformers import (
     uppercase,
     value,
 )
+
 def handle_trash_after_markers(context):
     title = context["title"]
-    # wzorzec: dokładnie 3 dowolne znaki z zestawu - _ | [ ] { } ( ) .
-    marker_pattern = r"[-_\|\[\]\{\}\(\)\.]{3}"
-    # znajdź wszystkie dopasowania
+    # dopasuj sekwencję co najmniej trzech znaków z zestawu
+    marker_pattern = r"[-_\|\[\]\{\}\(\)\.]{3,}"
+    # znajdź wszystkie wystąpienia
     matches = list(regex.finditer(marker_pattern, title))
     if not matches:
         return None
-    # weź ostatnie wystąpienie
+
+    # weź ostatnie z nich
     last = matches[-1]
     start = last.start()
-    # usuń wszystko od tego miejsca
-    raw = title[start:]
+    length = len(last.group(0))
+    cut_index = start + length  # tu zaczyna się to, co ma zostać usunięte
+
+    raw = title[cut_index:]     # fragment do usunięcia
     return {
         "raw_match": raw,
-        "match_index": start,
+        "match_index": cut_index,
         "remove": True
     }
 
