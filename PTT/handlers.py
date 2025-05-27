@@ -79,17 +79,16 @@ def handle_site_before_title(context):
 
 
 def add_defaults(parser: Parser):
-    # ———————— PREPROCESSOR ————————
-    parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
-    )
-    
+    # ———————— PREPROCESSOR ————————  
     original_parse = parser.parse
 
     def parse_wrapper(raw_title, *args, **kwargs):
+        # --- VERY FIRST THING: strip off the “[site] - ” (or “site - ”)
+        pre = handle_site_before_title({"title": raw_title})
+        if pre and pre["remove"]:
+            # only remove exactly what was matched, leaving underscores alone
+            raw_title = raw_title[len(pre["raw_match"]):]
+        
         cleaned = regex.sub(r'(?<=[\[\]])\s+', '', raw_title)
         if not hasattr(parser, "context"):
             parser.context = {}
