@@ -644,13 +644,10 @@ def add_defaults(parser: Parser):
         regex.compile(
             r"""\b(?!            # rozpocznij negatywne dopasowanie lookahead
                 (?:
-                    (?:
-                        napisy[\s_]*             # "napisy" ze spacją lub "_"
-                        (?:google[\s_]+tłumacz|translator)?[\s_]* # opcjonalnie "google tłumacz" lub "translator"
-                    )|
-                    (?:
-                        sub[\s_]+eng[\s_-]*     # "sub eng" ze spacją lub myślnikiem
-                    )
+                    napisy[\s_]*             # "napisy" ze spacją lub "_"
+                    (?:google[\s_]+tłumacz|translator)?[\s_]* # opcjonalnie "google tłumacz" lub "translator"
+                |
+                    sub[\s_]+eng[\s_-]*      # "sub eng" z opcjonalną spacją lub "-"
                 )pl\b
             )
             (?:(?<!w{3}\.\w+\.)PL|pol)\b""",
