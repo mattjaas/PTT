@@ -48,11 +48,15 @@ def skip_languages_before_title(context):
                 parser.context["_skip_languages_until_title"] = False
     return None
 
-def skip_site_if_after_title(match, *_):
-    from PTT.parse import parser  # zakładamy, że `parser` jest globalny lub możesz go inaczej przekazać
-    context = getattr(parser, "context", {})
-    if context.get("_skip_languages_until_title") is False:
+def skip_site_if_after_title(context):
+    parser_context = context.get("parser").context if context.get("parser") else {}
+    if parser_context.get("_skip_languages_until_title") is False:
         return None  # Już po tytule – pomiń
+
+    match = context.get("match")
+    if not match:
+        return None
+
     return match.group(1) if match.lastindex else match.group(0)
 
 def add_defaults(parser: Parser):
