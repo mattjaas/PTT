@@ -17,24 +17,33 @@ from PTT.transformers import (
 )
 def handle_site_before_title(context):
     text = context["title"]
-    # dopasuj tylko na początku: opcjonalny nawias, nazwa zakończona '.pl', potem spacje/znak '-'
+
+    # 1) najpierw próbujemy złapać [something.pl], {…pl} lub (…pl) na początku
     m = regex.search(
-        r"^\[?([\w-]+(?:[.\s-]pl))\]?(?:[ \-:]+)",
+        r'^[\(\[\{]\s*([\w-]+(?:[.\s-]pl))\s*[\)\]\}]',
         text,
         regex.IGNORECASE
     )
-    if not m:
-        return None
 
-    raw        = m.group(0)      # np. "[Audio PL] "
-    site_start = m.start()       # będzie 0 lub 1
-    val        = m.group(1)      # np. "Audio PL"
+    # 2) jeśli nie ma nawiasów, szukamy „domain.pl-” lub „domain.pl -” na początku
+    if not m:
+        m = regex.search(
+            r'^([\w-]+(?:[.\s-]pl))(?=(?:-| -))',
+            text,
+            regex.IGNORECASE
+        )
+        if not m:
+            return None
+
+    raw        = m.group(0)  # całość, np. "[Audio PL]" lub "Audio.PL-"
+    site_start = m.start()   # zawsze 0 albo ewentualnie 1 (gdy np. spacja przed nawiasem)
+    val        = m.group(1)  # samo "Audio.PL"
 
     return {
         "raw_match": raw,
         "match_index": site_start,
         "remove": True,
-        "value": val.lower()     # zapisujemy w postaci "audio pl"
+        "value": val
     }
 
     title_idx = title_match["match_index"]
