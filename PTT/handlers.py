@@ -80,6 +80,13 @@ def handle_site_before_title(context):
 
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————
+    parser.add_handler(
+        "debug",
+        regex.compile(r".*"),
+        lambda matched: print("[DEBUG]", matched),
+        {"remove": False}
+    )
+    
     original_parse = parser.parse
 
     def parse_wrapper(raw_title, *args, **kwargs):
