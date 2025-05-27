@@ -725,7 +725,7 @@ def add_defaults(parser: Parser):
         "debug",
         regex.compile(r".*"),
         lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
+        {"remove": True}
     )
     parser.add_handler("title", regex.compile(r"\bHigh.?Quality\b", regex.IGNORECASE), none, {"remove": True, "skipFromTitle": True})
     parser.add_handler(
