@@ -686,12 +686,6 @@ def add_defaults(parser: Parser):
     parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
-    )
-    parser.add_handler(
         "languages",
         regex.compile(
             r"""(?<!(?:napisy[\s_]*
@@ -747,17 +741,5 @@ def add_defaults(parser: Parser):
     parser.add_handler("group", handle_group_exclusion)
 
     parser.add_handler("trash", regex.compile(r"acesse o original", regex.IGNORECASE), boolean, {"remove": True})
-    parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": True}
-    )
     parser.add_handler("title", regex.compile(r"\bHigh.?Quality\b", regex.IGNORECASE), none, {"remove": True, "skipFromTitle": True})
     parser.add_handler("trash", handle_trash_after_markers)
-    parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": True}
-    )
