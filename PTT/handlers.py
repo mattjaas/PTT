@@ -16,6 +16,34 @@ from PTT.transformers import (
     value,
 )
 
+def handle_site_before_title(context):
+    text = context["title"]
+    # szukamy pierwszej domeny
+    m = regex.search(
+        r"(?:www?\.)?([\w-]+\.(?:pl))",
+        text, regex.IGNORECASE
+    )
+    if not m:
+        return None
+
+    site_start = m.start()
+    raw        = m.group(0)
+    val        = m.group(1)
+
+    # odczytujemy, czy i gdzie wykryto już 'title'
+    title_match = context.get("matched", {}).get("title")
+    title_idx   = title_match["match_index"] if title_match else len(text) + 1
+
+    # tylko jeśli domena stoi przed tytułem
+    if site_start < title_idx:
+        return {
+            "raw_match": raw,
+            "match_index": site_start,
+            "remove": True,
+            "value": val
+        }
+    return None
+
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————
     original_parse = parser.parse
@@ -28,7 +56,7 @@ def add_defaults(parser: Parser):
         return original_parse(cleaned, *args, **kwargs)
 
     parser.parse = parse_wrapper
-    
+    parser.add_handler("site", handle_site_before_title)
     """
     Adds default handlers to the provided parser for various patterns such as episode codes, resolution,
     date formats, year ranges, etc. The handlers use regular expressions to match patterns and transformers
