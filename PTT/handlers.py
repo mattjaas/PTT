@@ -163,7 +163,10 @@ def add_defaults(parser: Parser):
     # parser.add_handler("trash", regex.compile(r"\b(\w+rip|hc|((h[dq]|clean)(.+)?)?cam.?(rip|rp)?|(h[dq])?(ts|tc)(?:\d{3,4})?|tele(sync|cine)?|\d+[0o]+([mg]b)|\d{3,4}tc)\b"), boolean, {"remove": False})
     parser.add_handler(
         "trash",
-        regex.compile(r"\bsub[ _.-]?eng[ _.-]?pl\b|\bsub[ _.-]?pl\b", regex.IGNORECASE),
+        regex.compile(
+            r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|plsub|plsubbed|subbedpl)\b",
+            regex.IGNORECASE
+        ),
         boolean,
         {"remove": True}
     )
