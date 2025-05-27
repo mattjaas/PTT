@@ -639,6 +639,23 @@ def add_defaults(parser: Parser):
     parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
+    parser.add_handler(
+        "languages",
+        regex.compile(
+            r"""\b(?!            # rozpocznij negatywne dopasowanie lookahead
+                (?:
+                    napisy[\s_]*                         # "napisy" ze spacją lub "_"
+                    (?:google[\s_]+tłumacz|translator)?[\s_]*  # opcjonalnie "google tłumacz" lub "translator"
+                    pl|
+                    sub[\s_]+eng[-\s]+pl                  # dodany wyjątek dla "Sub Eng-PL" i "Sub Eng PL"
+                )\b
+            )
+            (?:(?<!w{3}\.\w+\.)PL|pol)\b""",
+            regex.IGNORECASE | regex.VERBOSE
+        ),
+        uniq_concat(value("pl")),
+        {"skipIfAlreadyFound": False}
+    )
 
 
 
