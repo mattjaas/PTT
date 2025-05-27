@@ -643,10 +643,12 @@ def add_defaults(parser: Parser):
         "languages",
         regex.compile(
             r"""\b(?!            # rozpocznij negatywne dopasowanie lookahead
-                (?:             # początek grupy wyjątków
-                    napisy[\s_]*(?:google[\s_]+tłumacz|translator)?[\s_]*pl\b
-                    |Sub[\s_-]*Eng-PL\b    # dodatkowy wyjątek dla "Sub Eng-PL"
-                )               
+                (?:
+                    napisy[\s_]*             # "napisy" ze spacją lub "_"
+                    (?:google[\s_]+tłumacz|translator)?[\s_]*  # opcjonalnie "google tłumacz" lub "translator"
+                    |                       # dodatkowy wyjątek:
+                    Sub\s+Eng-              #   "Sub Eng-PL"
+                )pl\b
             )
             (?:(?<!w{3}\.\w+\.)PL|pol)\b""",
             regex.IGNORECASE | regex.VERBOSE
@@ -654,6 +656,7 @@ def add_defaults(parser: Parser):
         uniq_concat(value("pl")),
         {"skipIfAlreadyFound": False}
     )
+
 
     # Networks
     parser.add_handler("network", regex.compile(r"\bATVP?\b", regex.IGNORECASE), value("Apple TV"), {"remove": True})
