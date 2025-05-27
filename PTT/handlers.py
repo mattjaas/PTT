@@ -15,28 +15,27 @@ from PTT.transformers import (
     uppercase,
     value,
 )
-
 def handle_site_before_title(context):
     text = context["title"]
-
-    # 1) Znajdź pierwsze wystąpienie *.pl gdziekolwiek w tekście
+    # dopasuj tylko na początku: opcjonalny nawias, nazwa zakończona '.pl', potem spacje/znak '-'
     m = regex.search(
-        r"(?:www\.)?([\w-]+(?:[.\s-]pl))",
+        r"^\[?([\w-]+(?:[.\s-]pl))\]?(?:[ \-:]+)",
         text,
         regex.IGNORECASE
     )
     if not m:
         return None
 
-    site_start = m.start()      # pozycja początku raw_match
-    raw        = m.group(0)     # np. "Audio.PL"
-    val        = m.group(1)     # np. "Audio.PL"
+    raw        = m.group(0)      # np. "[Audio PL] "
+    site_start = m.start()       # będzie 0 lub 1
+    val        = m.group(1)      # np. "Audio PL"
 
-    # 2) Sprawdź, czy tytuł już wcześniej został wykryty
-    title_match = context.get("matched", {}).get("title")
-    if not title_match:
-        # nie ma jeszcze tytułu → pomijamy to .pl
-        return None
+    return {
+        "raw_match": raw,
+        "match_index": site_start,
+        "remove": True,
+        "value": val.lower()     # zapisujemy w postaci "audio pl"
+    }
 
     title_idx = title_match["match_index"]
 
