@@ -16,6 +16,16 @@ from PTT.transformers import (
     value,
 )
 
+def site_transformer_factory(parser):
+    def transformer(match):
+        if parser.context.get("_skip_languages_until_title") is False:
+            return None  # już po tytule, nie przetwarzaj
+        return {
+            "value": match.group(1) if match.lastindex else match.group(0),
+            "remove": True
+        }
+    return transformer
+
 def language_skip_if_before_title(transform_func):
     def wrapper(context):
         parser_context = context.get("parser").context if context.get("parser") else {}
@@ -664,22 +674,19 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "site",
         regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|pl|party|vip|nu|pics)\b", regex.IGNORECASE),
-        skip_site_if_after_title,
-        {"remove": True}
+        site_transformer_factory(parser)
     )
     
     parser.add_handler(
         "site",
         regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE),
-        skip_site_if_after_title,
-        {"remove": True}
+        site_transformer_factory(parser)
     )
     
     parser.add_handler(
         "site",
         regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE),
-        skip_site_if_after_title,
-        {"remove": True}
+         site_transformer_factory(parser)
     )
     parser.add_handler(
         "debug",
