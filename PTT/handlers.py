@@ -671,13 +671,12 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "languages",
         regex.compile(
-            r"""\b(?!            # rozpocznij negatywne dopasowanie lookahead
-                (?:
-                    napisy[\s_]*             # "napisy" ze spacją lub "_"
-                    (?:google[\s_]+tłumacz|translator)?[\s_]* # opcjonalnie "google tłumacz" lub "translator"
-                )pl\b
-            )
-            (?:(?<!w{3}\.\w+\.)PL|pol)\b""",
+            r"""(?<!(?:napisy[\s_]*
+                        (?:google[\s_]+tłumacz|translator)?  # opcjonalny „google tłumacz” lub „translator”
+                        [\s_]*
+                    ))
+                \b(?:PL|pol)\b
+            """,
             regex.IGNORECASE | regex.VERBOSE
         ),
         uniq_concat(value("pl")),
