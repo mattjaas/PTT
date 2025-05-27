@@ -44,7 +44,7 @@ def handle_site_before_title(context):
     # wzorzec całej domeny z pl/com.pl, www. i wieloma poddomenami
     domain_pattern = (
         r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
-        r'(?:\.(?:com\.)?pl|[\s-]pl)'
+        r'(?:\.(?:com\.)?pl|\.pl|[\s-]pl)(?![\w])'
     )
 
     # 1) Bracketed: [domena.pl]  lub  {domena.com.pl}  albo  (domena pl)
@@ -59,7 +59,7 @@ def handle_site_before_title(context):
     # 2) Bez nawiasu, ale natychmiast potem '-' lub ' -'
     if not m:
         m = regex.search(
-            rf'^({domain_pattern})\s*-\s*',
+            rf'^({domain_pattern})(?!_)\s*[-–—]\s*'
             text,
             regex.IGNORECASE
         )
