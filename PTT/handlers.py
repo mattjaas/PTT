@@ -643,10 +643,10 @@ def add_defaults(parser: Parser):
         "languages",
         regex.compile(
             r"""\b(?!            # rozpocznij negatywne dopasowanie lookahead
-                (?:
-                    napisy[\s_]*             # "napisy" ze spacją lub "_"
-                    (?:google[\s_]+tłumacz|translator)?[\s_]* # opcjonalnie "google tłumacz" lub "translator"
-                )pl\b
+                (?:             # początek grupy wyjątków
+                    napisy[\s_]*(?:google[\s_]+tłumacz|translator)?[\s_]*pl\b
+                    |Sub[\s_-]*Eng-PL\b    # dodatkowy wyjątek dla "Sub Eng-PL"
+                )               
             )
             (?:(?<!w{3}\.\w+\.)PL|pol)\b""",
             regex.IGNORECASE | regex.VERBOSE
