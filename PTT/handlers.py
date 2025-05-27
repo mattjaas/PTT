@@ -16,30 +16,6 @@ from PTT.transformers import (
     value,
 )
 
-def language_skip_if_before_title(transform_func):
-    def wrapper(context):
-        parser_context = context.get("parser").context if context.get("parser") else {}
-        if parser_context.get("_skip_languages_until_title"):
-            if context["key"] != "title":
-                return None  # Zignoruj język przed tytułem
-            else:
-                parser_context["_skip_languages_until_title"] = False
-        return transform_func(context)
-    return wrapper
-    
-def skip_languages_before_title(context):
-    parser = context.get("parser")
-    matched = context.get("matched", {})
-    key = context.get("key")
-
-    if parser and hasattr(parser, "context"):
-        if parser.context.get("_skip_languages_until_title", True):
-            if key != "title":
-                return {"skip": True}
-            else:
-                parser.context["_skip_languages_until_title"] = False
-    return None
-
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————
     original_parse = parser.parse
