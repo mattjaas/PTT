@@ -642,16 +642,15 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "languages",
         regex.compile(
-            r"""\b(?!                    # negatywne lookahead – niech odrzuca:
-                (?:                      #   albo:
-                    napisy[\s_]*         #     "napisy" + spacje/_
-                    (?:google[\s_]+tłumacz|translator)?[\s_]*  #     opcjonalne "google tłumacz"/"translator"
-                    PL                   #     zwieńczone "PL"
-                |
-                    Sub\s+Eng-PL         #   albo "Sub Eng-PL"
+            r"""\b(?!                    # nie chcemy:
+                (?:
+                    napisy[\s_]*             #   „napisy…PL”
+                    (?:google[\s_]+tłumacz|translator)?[\s_]*PL
+                  |
+                    Sub\s+Eng[-\s]?PL        #   „Sub Eng-PL” lub „Sub Eng PL”
                 )\b
             )
-            (?:(?<!w{3}\.\w+\.)PL|pol)\b  # dopiero teraz dopasuj zwykłe "PL" lub "pol"
+            (?:(?<!w{3}\.\w+\.)PL|pol)\b   # dopasuj normalne „PL” lub „pol”
             """,
             regex.IGNORECASE | regex.VERBOSE
         ),
