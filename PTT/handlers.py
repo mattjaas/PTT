@@ -105,13 +105,6 @@ def add_defaults(parser: Parser):
         return result
     
     parser.parse = parse_wrapper
-
-    parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
-    )
     
     """
     Adds default handlers to the provided parser for various patterns such as episode codes, resolution,
@@ -703,12 +696,6 @@ def add_defaults(parser: Parser):
     parser.add_handler("size", regex.compile(r"\b(\d+(\.\d+)?\s?(MB|GB|TB))\b", regex.IGNORECASE), none, {"remove": True})
 
     # Site
-    parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
-    )
     parser.add_handler("site", regex.compile(r"\b(?:www?.?)?(?:\w+\-)?\w+[\.\s](?:com|org|net|ms|tv|mx|co|party|vip|nu|pics|eu|in)\b", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"rarbg|torrentleech|(?:the)?piratebay", regex.IGNORECASE), value("$1"), {"remove": True})
     parser.add_handler("site", regex.compile(r"\[([^\]]+\.[^\]]+)\](?=\.\w{2,4}$|\s)", regex.IGNORECASE), value("$1"), {"remove": True})
@@ -769,10 +756,4 @@ def add_defaults(parser: Parser):
 
     parser.add_handler("trash", regex.compile(r"acesse o original", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("title", regex.compile(r"\bHigh.?Quality\b", regex.IGNORECASE), none, {"remove": True, "skipFromTitle": True})
-    parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
-    )
     parser.add_handler("trash", handle_trash_after_markers)
