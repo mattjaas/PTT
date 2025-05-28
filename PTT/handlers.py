@@ -769,4 +769,10 @@ def add_defaults(parser: Parser):
 
     parser.add_handler("trash", regex.compile(r"acesse o original", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("title", regex.compile(r"\bHigh.?Quality\b", regex.IGNORECASE), none, {"remove": True, "skipFromTitle": True})
+        parser.add_handler(
+        "debug",
+        regex.compile(r".*"),
+        lambda matched: print("[DEBUG]", matched),
+        {"remove": False}
+    )
     parser.add_handler("trash", handle_trash_after_markers)
