@@ -86,6 +86,7 @@ def add_defaults(parser: Parser):
         # --- VERY FIRST THING: strip off the “[site] - ” (or “site - ”)
         pre = handle_site_before_title({"title": raw_title})
         if pre and pre["remove"]:
+            parser.context["site"] = pre["value"]
             # only remove exactly what was matched, leaving underscores alone
             raw_title = raw_title[len(pre["raw_match"]):]
         
@@ -93,14 +94,12 @@ def add_defaults(parser: Parser):
         if not hasattr(parser, "context"):
             parser.context = {}
         parser.context["_skip_languages_until_title"] = True
-        return original_parse(cleaned, *args, **kwargs)
+        result = original_parse(cleaned, *args, **kwargs)
 
-    parser.add_handler(
-        "debug",
-        regex.compile(r".*"),
-        lambda matched: print("[DEBUG]", matched),
-        {"remove": False}
-    )
+        # 3) wgrywamy site do finalnego wyniku, jeśli mamy je w kontekście
+        if "site" in parser.context:
+            result["site"] = parser.context.pop("site")
+        return result
     
     parser.parse = parse_wrapper
 
