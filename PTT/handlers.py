@@ -56,10 +56,13 @@ def handle_site_before_title(context):
         regex.IGNORECASE
     )
 
-    # 2) Bez nawiasu, ale natychmiast potem '-' lub ' -'
+    # 2) Bez nawiasu: tylko strona.pl / example.com.pl / www.strona.pl
     if not m:
+        # prostszy wzorzec: dokładnie jedna etykieta + .pl (lub .com.pl)
+        simple_domain = r'(?:www\.)?[\w-]+\.(?:com\.)?pl'
+        # po domain musi być spacja lub '-' lub '_'
         m = regex.search(
-            rf'^({domain_pattern})\s*[-_]\s*',
+            rf'^({simple_domain})(?:\s+|[-_])\s*',
             text,
             regex.IGNORECASE
         )
