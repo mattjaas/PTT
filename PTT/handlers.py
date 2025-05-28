@@ -83,6 +83,8 @@ def add_defaults(parser: Parser):
     original_parse = parser.parse
 
     def parse_wrapper(raw_title, *args, **kwargs):
+        if not hasattr(parser, "context"):
+            parser.context = {}
         # --- VERY FIRST THING: strip off the “[site] - ” (or “site - ”)
         pre = handle_site_before_title({"title": raw_title})
         if pre and pre["remove"]:
@@ -91,8 +93,6 @@ def add_defaults(parser: Parser):
             raw_title = raw_title[len(pre["raw_match"]):]
         
         cleaned = regex.sub(r'(?<=[\[\]])\s+', '', raw_title)
-        if not hasattr(parser, "context"):
-            parser.context = {}
         parser.context["_skip_languages_until_title"] = True
         result = original_parse(cleaned, *args, **kwargs)
 
