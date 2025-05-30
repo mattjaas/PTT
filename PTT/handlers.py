@@ -173,11 +173,9 @@ def add_defaults(parser: Parser):
     parser.add_handler("episode_code", regex.compile(r"\[([A-Z0-9]{8})]"), uppercase, {"remove": True})
     parser.add_handler("episode_code", regex.compile(r"(?:\[|\()(?=\D+\d|\d+[^\d\])])\b([A-Z0-9]{8}|[a-z0-9]{8})(?:\]|\))"), uppercase, {"remove": True, "skipIfAlreadyFound": True})
 
-    # Trash (Equivalent to RTN auto-trasher) - DO NOT REMOVE HERE!
-    # This one is pretty strict, but it removes a lot of the garbage
-    # parser.add_handler("trash", regex.compile(r"\b(\w+rip|hc|((h[dq]|clean)(.+)?)?cam.?(rip|rp)?|(h[dq])?(ts|tc)(?:\d{3,4})?|tele(sync|cine)?|\d+[0o]+([mg]b)|\d{3,4}tc)\b"), boolean, {"remove": False})
+
     parser.add_handler(
-        "trash",
+        "cleanup",
         regex.compile(
             r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|pl[ _.\-]?sub|pl[ _.\-]?subbed|plsub|plsubbed|subbedpl)\b",
             regex.IGNORECASE
@@ -185,6 +183,16 @@ def add_defaults(parser: Parser):
         boolean,
         {"remove": True}
     )
+    parser.add_handler(
+        "cleanup",
+        regex.compile(r"\+\s*sub\s*[^+]*", regex.IGNORECASE),
+        boolean,
+        {"remove": True}
+    )
+    
+    # Trash (Equivalent to RTN auto-trasher) - DO NOT REMOVE HERE!
+    # This one is pretty strict, but it removes a lot of the garbage
+    # parser.add_handler("trash", regex.compile(r"\b(\w+rip|hc|((h[dq]|clean)(.+)?)?cam.?(rip|rp)?|(h[dq])?(ts|tc)(?:\d{3,4})?|tele(sync|cine)?|\d+[0o]+([mg]b)|\d{3,4}tc)\b"), boolean, {"remove": False})
     parser.add_handler("trash", regex.compile(r"\b(?:H[DQ][ .-]*)?CAM(?!.?(S|E|\()\d+)(?:H[DQ])?(?:[ .-]*Rip|Rp)?\b", regex.IGNORECASE), boolean, {"remove": False})
     parser.add_handler("trash", regex.compile(r"\b(?:H[DQ][ .-]*)?S[ \.\-]print\b", regex.IGNORECASE), boolean, {"remove": False})
     parser.add_handler("trash", regex.compile(r"\b(?:HD[ .-]*)?T(?:ELE)?(C|S)(?:INE|YNC)?(?:Rip)?\b", regex.IGNORECASE), boolean, {"remove": False})
@@ -757,4 +765,4 @@ def add_defaults(parser: Parser):
 
     parser.add_handler("trash", regex.compile(r"acesse o original", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("title", regex.compile(r"\bHigh.?Quality\b", regex.IGNORECASE), none, {"remove": True, "skipFromTitle": True})
-    parser.add_handler("trash", handle_trash_after_markers)
+    parser.add_handler("cleanup", handle_trash_after_markers)
