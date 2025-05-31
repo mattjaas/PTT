@@ -185,6 +185,36 @@ def array(chain: Optional[Callable[[str], Union[str, int]]] = None) -> Callable[
 
     return inner
 
+ 
+def concat_values(chain: Callable[[str], Union[Optional[Union[str, int]], Optional[List[Union[str, int]]]]]) -> Callable[[str, Optional[List[Union[str, int]]]], List[Union[str, int]]]:
+    """
+    Return a transformer that appends unique value(s) to a list.
+    The chained transformer can return a single value, a list of values, or None.
+    The final list will be sorted.
+    """
+    def inner(input_value: str, current_list: Optional[List[Union[str, int]]] = None) -> List[Union[str, int]]:
+        if current_list is None:
+            current_list = []
+
+        new_values = chain(input_value)
+
+        if new_values is None:
+            current_list.sort() # Ensure sorted state even if no new values
+            return current_list
+
+        if isinstance(new_values, list):
+            for val in new_values:
+                if val is not None and val not in current_list:
+                    current_list.append(val)
+        else:  # Single value
+            if new_values is not None and new_values not in current_list:
+                current_list.append(new_values)
+        
+        current_list.sort()
+        return current_list
+    return inner
+
+
 
 def uniq_concat(chain: Callable[[str], Union[str, int]]) -> Callable[[str, Optional[List[Union[str, int]]]], List[Union[str, int]]]:
     """
