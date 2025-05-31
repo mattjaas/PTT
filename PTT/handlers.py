@@ -5,6 +5,7 @@ from PTT.parse import Parser
 from PTT.transformers import (
     array,
     boolean,
+    concat_values,
     date,
     integer,
     lowercase,
@@ -414,8 +415,8 @@ def add_defaults(parser: Parser):
     parser.add_handler("complete", regex.compile(r"Complete(.\d{1,2})"), boolean, {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("complete", regex.compile(r"(?:\bthe\W)?(?:\bcomplete|collection|dvd)?\b[ .]?\bbox[ .-]?set\b", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("complete", regex.compile(r"(?:\bthe\W)?(?:\bcomplete|collection|dvd)?\b[ .]?\bmini[ .-]?series\b", regex.IGNORECASE), boolean)
-    parser.add_handler("complete", regex.compile(r"(?:\bthe\W)?(?:\bcomplete|full|all)\b.*\b(?:series|seasons|sezon|sezony|collection|episodes|set|pack|movies)\b", regex.IGNORECASE), boolean)
-    parser.add_handler("complete", regex.compile(r"\b(?:series|seasons|sezon|sezony|movies?)\b.*\b(?:complete|collection)\b", regex.IGNORECASE), boolean, {"remove": True})
+    parser.add_handler("complete", regex.compile(r"(?:\bthe\W)?(?:\bcomplete|full|all)\b.*\b(?:series|seasons|collection|episodes|set|pack|movies)\b", regex.IGNORECASE), boolean)
+    parser.add_handler("complete", regex.compile(r"\b(?:series|movies?)\b.*\b(?:complete|collection)\b", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("complete", regex.compile(r"(?:\bthe\W)?\bultimate\b[ .]\bcollection\b", regex.IGNORECASE), boolean, {"skipIfAlreadyFound": False})
     parser.add_handler("complete", regex.compile(r"\bcollection\b.*\b(?:set|pack|movies)\b", regex.IGNORECASE), boolean)
     parser.add_handler("complete", regex.compile(r"\bcollection(?:(\s\[|\s\())", regex.IGNORECASE), boolean, {"remove": True})
@@ -425,35 +426,122 @@ def add_defaults(parser: Parser):
     parser.add_handler("complete", regex.compile(r"\b\[Complete\]\b", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("complete", regex.compile(r"(?<!A.?|The.?)\bComplete\b", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("complete", regex.compile(r"COMPLETE"), boolean, {"remove": True})
-    parser.add_handler("complete", regex.compile(r"\bkolekcja\b(?:\Wfilm(?:y|ów|ow)?)?"), boolean, {"remove": True})
+
+    # Oryginał: r"\b(?:INTEGRALE?|INTÉGRALE?)\b" (francuski)
+    # Polskie odpowiedniki dla "kompletny", "całość"
+    parser.add_handler("complete", regex.compile(r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CAŁY|CAŁA|CAŁE|CAŁOŚĆ|KOMPLET)\b", regex.IGNORECASE), boolean, {"remove": True, "skipIfAlreadyFound": False})
+    parser.add_handler("complete", regex.compile(r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CALY|CALA|CALE|CALOSC|KOMPLET)\b", regex.IGNORECASE), boolean, {"remove": True, "skipIfAlreadyFound": False})
+
+    # Oryginał: r"(?:\bthe\W)?(?:\bcomplete|full|all)\b.*\b(?:series|seasons|collection|episodes|set|pack|movies)\b"
+    # Polskie odpowiedniki dla "kompletna seria", "wszystkie sezony", "pełna kolekcja", "całe odcinki" itp.
+    parser.add_handler("complete", regex.compile(r"\b(?:komplet(?:ny|na|ne|u)|pełn(?:y|a|e|ej)|cał(?:y|a|e|ości)|wszystkie)\b.*\b(?:seri(?:a|i|e|ał)|sezon(?:y|ów)|kolekc(?:ja|ji)|odcink(?:i|ów)|film(?:y|ów)|części|cz??ści|zestaw|pakiet)\b", regex.IGNORECASE), boolean)
+    parser.add_handler("complete", regex.compile(r"\b(?:komplet(?:ny|na|ne|u)|peln(?:y|a|e|ej)|cal(?:y|a|e|osci)|wszystkie)\b.*\b(?:seri(?:a|i|e|al)|sezon(?:y|ow)|kolekc(?:ja|ji)|odcink(?:i|ow)|film(?:y|ow)|czesci|zestaw|pakiet)\b", regex.IGNORECASE), boolean)
+
+    # Oryginał: r"\b(?:series|movies?)\b.*\b(?:complete|collection)\b"
+    # Polskie odpowiedniki dla "seria kompletna", "filmy kolekcja" itp.
+    parser.add_handler("complete", regex.compile(r"\b(?:seri(?:a|i|e|ał)|film(?:y|ów)?|sezon(?:y|ów)?|odcink(?:i|ów)?)\b.*\b(?:komplet(?:ny|na|ne|u)|cał(?:y|a|e|ości)|kolekc(?:ja|ji))\b", regex.IGNORECASE), boolean, {"remove": True})
+    parser.add_handler("complete", regex.compile(r"\b(?:seri(?:a|i|e|al)|film(?:y|ow)?|sezon(?:y|ow)?|odcink(?:i|ow)?)\b.*\b(?:komplet(?:ny|na|ne|u)|cal(?:y|a|e|osci)|kolekc(?:ja|ji))\b", regex.IGNORECASE), boolean, {"remove": True})
+
+    # Oryginał: r"duology|trilogy|quadr[oi]logy|tetralogy|pentalogy|hexalogy|heptalogy|anthology"
+    # Polski odpowiednik dla "anthology" to "antologia"
+    parser.add_handler("complete", regex.compile(r"\bantologi[ai]\b", regex.IGNORECASE), boolean, {"skipIfAlreadyFound": False}) # antologia, antologii
+
 
     # Seasons
-    parser.add_handler("seasons", regex.compile(r"(?:complete\W|seasons?\W|\W|^)((?:s\d{1,2}[., +/\\&-]+)+s\d{1,2}\b)", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:complete\W|seasons?\W|\W|^)[([]?(s\d{2,}-\d{2,}\b)[)\]]?", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:complete\W|seasons?\W|\W|^)[([]?(s[1-9]-[2-9])[)\]]?", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"\d+ª(?:.+)?(?:a.?)?\d+ª(?:(?:.+)?(?:temporadas?))", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:seasons?|[Сс]езони?|temporadas?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[., /\\&]+)+\d{1,2}\b)[)\]]?", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:seasons?|[Сс]езони?|temporadas?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[.-]+)+[1-9]\d?\b)[)\]]?", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?season[. ]?[([]?((?:\d{1,2}[. -]+)+[1-9]\d?\b)[)\]]?(?!.*\.\w{2,4}$)", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?\bseasons?\b[. -]?(\d{1,2}[. -]?(?:to|thru|and|\+|:)[. -]?\d{1,2})\b", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:saison|seizoen|season|series|sezon|sezony|temp(?:orada)?):?[. ]?(\d{1,2})\b", regex.IGNORECASE), array(integer))
-    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?й)?[. _]?(?:[Сс]езон|sez(?:on)?)(?:\W?\D|$)", regex.IGNORECASE), array(integer), {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"[Сс]езон:?[. _]?№?(\d{1,2})(?!\d)", regex.IGNORECASE), array(integer), {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})Â?[°ºªa]?[. ]*temporada", regex.IGNORECASE), array(integer), {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"t(\d{1,3})(?:[ex]+|$)", regex.IGNORECASE), array(integer), {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete)?(?<![a-z])\bs(\d{1,3})(?:[\Wex]|\d{2}\b|$)", regex.IGNORECASE), array(integer), {"remove": False, "skipIfAlreadyFound": False})
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:\W|^)(\d{1,2})[. ]?(?:st|nd|rd|th)[. ]*season", regex.IGNORECASE), array(integer))
-    parser.add_handler("seasons", regex.compile(r"(?<=S)\d{2}(?=E\d+)"), array(integer), {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})[xх]\d{1,3}(?:\D|$)"), array(integer))
-    parser.add_handler("seasons", regex.compile(r"\bSn([1-9])(?:\D|$)"), array(integer))
-    parser.add_handler("seasons", regex.compile(r"[[(](\d{1,2})\.\d{1,3}[)\]]"), array(integer))
-    parser.add_handler("seasons", regex.compile(r"-\s?(\d{1,2})\.\d{2,3}\s?-"), array(integer))
-    parser.add_handler("seasons", regex.compile(r"(?:^|\/)(\d{1,2})-\d{2}\b(?!-\d)"), array(integer))
-    parser.add_handler("seasons", regex.compile(r"[^\w-](\d{1,2})-\d{2}(?=\.\w{2,4}$)"), array(integer))
-    parser.add_handler("seasons", regex.compile(r"(?<!\bEp?(?:isode)? ?\d+\b.*)\b(\d{2})[ ._]\d{2}(?:.F)?\.\w{2,4}$"), array(integer))
-    parser.add_handler("seasons", regex.compile(r"\bEp(?:isode)?\W+(\d{1,2})\.\d{1,3}\b", regex.IGNORECASE), array(integer))
-    parser.add_handler("seasons", regex.compile(r"\bSeasons?\b.*\b(\d{1,2}-\d{1,2})\b", regex.IGNORECASE), range_func, {"remove": True})
-    parser.add_handler("seasons", regex.compile(r"(?:\W|^)(\d{1,2})(?:e|ep)\d{1,3}(?:\W|$)", regex.IGNORECASE), array(integer))
+    parser.add_handler("seasons", regex.compile(r"(?:complete\W|seasons?\W|\W|^)((?:s\d{1,2}[., +/\\&-]+)+s\d{1,2}\b)", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:complete\W|seasons?\W|\W|^)[([]?(s\d{2,}-\d{2,}\b)[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:complete\W|seasons?\W|\W|^)[([]?(s[1-9]-[2-9])[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"\d+ª(?:.+)?(?:a.?)?\d+ª(?:(?:.+)?(?:temporadas?))", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:seasons?|[Сс]езони?|temporadas?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[., /\\&]+)+\d{1,2}\b)[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:seasons?|[Сс]езони?|temporadas?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[.-]+)+[1-9]\d?\b)[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?season[. ]?[([]?((?:\d{1,2}[. -]+)+[1-9]\d?\b)[)\]]?(?!.*\.\w{2,4}$)", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?\bseasons?\b[. -]?(\d{1,2}[. -]?(?:to|thru|and|\+|:)[. -]?\d{1,2})\b", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:saison|seizoen|season|series|temp(?:orada)?):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?й)?[. _]?(?:[Сс]езон|sez(?:on)?)(?:\W?\D|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"[Сс]езон:?[. _]?№?(\d{1,2})(?!\d)", regex.IGNORECASE), concat_values(integer), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})Â?[°ºªa]?[. ]*temporada", regex.IGNORECASE), concat_values(integer), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"t(\d{1,3})(?:[ex]+|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete)?(?<![a-z])\bs(\d{1,3})(?:[\Wex]|\d{2}\b|$)", regex.IGNORECASE), concat_values(integer), {"remove": False, "skipIfAlreadyFound": False})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:\W|^)(\d{1,2})[. ]?(?:st|nd|rd|th)[. ]*season", regex.IGNORECASE), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"(?<=S)\d{2}(?=E\d+)"), concat_values(integer), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})[xх]\d{1,3}(?:\D|$)"), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"\bSn([1-9])(?:\D|$)"), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"[[(](\d{1,2})\.\d{1,3}[)\]]"), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"-\s?(\d{1,2})\.\d{2,3}\s?-"), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"(?:^|\/)(\d{1,2})-\d{2}\b(?!-\d)"), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"[^\w-](\d{1,2})-\d{2}(?=\.\w{2,4}$)"), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"(?<!\bEp?(?:isode)? ?\d+\b.*)\b(\d{2})[ ._]\d{2}(?:.F)?\.\w{2,4}$"), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"\bEp(?:isode)?\W+(\d{1,2})\.\d{1,3}\b", regex.IGNORECASE), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"\bSeasons?\b.*\b(\d{1,2}-\d{1,2})\b", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:\W|^)(\d{1,2})(?:e|ep)\d{1,3}(?:\W|$)", regex.IGNORECASE), concat_values(integer))
+    
+    # Seasons
+    # Oryginał: r"\d+ª(?:.+)?(?:a.?)?\d+ª(?:(?:.+)?(?:temporadas?))" (hiszpański/portugalski 'temporada')
+    # Polski odpowiednik: "sezon"
+    parser.add_handler("seasons", regex.compile(r"\d+(?:.+)?(?:do|-)\d+(?:(?:.+)?(?:sezon(?:y|ów|ami)?))", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"\d+(?:.+)?(?:do|-)\d+(?:(?:.+)?(?:sezon(?:y|ow|ami)?))", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+
+    # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?(?:seasons?|[Сс]езони?|temporadas?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[., /\\&]+)+\d{1,2}\b)[)\]]?" (rosyjski/hiszpański/portugalski)
+    # Polski odpowiednik: "sezony"
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon(?:y|u|ów)?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[., /\\&]+)+\d{1,2}\b)[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon(?:y|u|ow)?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[., /\\&]+)+\d{1,2}\b)[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+
+    # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?(?:seasons?|[Сс]езони?|temporadas?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[.-]+)+[1-9]\d?\b)[)\]]?" (rosyjski/hiszpański/portugalski)
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon(?:y|u|ów)?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[.-]+)+[1-9]\d?\b)[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon(?:y|u|ow)?)[. ]?[-:]?[. ]?[([]?((?:\d{1,2}[.-]+)+[1-9]\d?\b)[)\]]?", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+
+    # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?season[. ]?[([]?((?:\d{1,2}[. -]+)+[1-9]\d?\b)[)\]]?(?!.*\.\w{2,4}$)"
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?sezon[. ]?[([]?((?:\d{1,2}[. -]+)+[1-9]\d?\b)[)\]]?(?!.*\.\w{2,4}$)", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?sezon[. ]?[([]?((?:\d{1,2}[. -]+)+[1-9]\d?\b)[)\]]?(?!.*\.\w{2,4}$)", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+
+    # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?\bseasons?\b[. -]?(\d{1,2}[. -]?(?:to|thru|and|\+|:)[. -]?\d{1,2})\b"
+    # Polskie "do", "i", "oraz" zamiast "to", "thru", "and"
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?\bsezon(?:y|u|ów)?\b[. -]?(\d{1,2}[. -]?(?:do|i|oraz|\+|:)[. -]?\d{1,2})\b", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?\bsezon(?:y|u|ow)?\b[. -]?(\d{1,2}[. -]?(?:do|i|oraz|\+|:)[. -]?\d{1,2})\b", regex.IGNORECASE), concat_values(range_func), {"remove": True})
+
+    # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?(?:saison|seizoen|season|series|temp(?:orada)?):?[. ]?(\d{1,2})\b" (francuski/holenderski/hiszpański/portugalski)
+    # Polski odpowiednik: "sezon", "seria"
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii)):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii)):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
+
+    # Oryginał: r"(\d{1,2})(?:-?й)?[. _]?(?:[Сс]езон|sez(?:on)?)(?:\W?\D|$)" (rosyjski)
+    # Polski odpowiednik, np. "1-szy sezon", "2-gi sezon"
+    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?[sS][zZ][yY]|[gG][iI]|[cC][iI]|[tT][yY])?[. _]?(?:sezon)(?:\W?\D|$)", regex.IGNORECASE), concat_values(integer), {"remove": True}) # np. 1-szy, 2-gi, 3-ci, 4-ty
+    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?[sS][zZ][yY]|[gG][iI]|[cC][iI]|[tT][yY])?[. _]?(?:sezon)(?:\W?\D|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
+
+    # Oryginał: r"[Сс]езон:?[. _]?№?(\d{1,2})(?!\d)" (rosyjski)
+    # Polski odpowiednik: "Sezon nr X"
+    parser.add_handler("seasons", regex.compile(r"Sezon:?[. _]?Nr\.?:?[. _]?(\d{1,2})(?!\d)", regex.IGNORECASE), concat_values(integer), {"remove": True})
+
+    # Oryginał: r"(?:\D|^)(\d{1,2})Â?[°ºªa]?[. ]*temporada" (hiszpański/portugalski)
+    # Polski odpowiednik: "1-szy sezon"
+    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})(?:-?[sS][zZ][yY]|[gG][aA]|[cC][iI]|[tT][aA])?[. ]*sezon", regex.IGNORECASE), concat_values(integer), {"remove": True}) # np. 1-szy, 2-ga, 3-ci, 4-ta
+    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})(?:-?[sS][zZ][yY]|[gG][aA]|[cC][iI]|[tT][aA])?[. ]*sezon", regex.IGNORECASE), concat_values(integer), {"remove": True})
+
+    # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?(?:\W|^)(\d{1,2})[. ]?(?:st|nd|rd|th)[. ]*season"
+    # Polskie końcówki liczebników porządkowych
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?(?:\W|^)(\d{1,2})[. ]?(?:-?(?:szy|gi|ci|ty|my|wy))?[. ]*sezon", regex.IGNORECASE), concat_values(integer))
+    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?(?:\W|^)(\d{1,2})[. ]?(?:-?(?:szy|gi|ci|ty|my|wy))?[. ]*sezon", regex.IGNORECASE), concat_values(integer))
+
+    # 1) SxxEyy lub SxxOyy lub SxxODCyy → wyciągnij „xx” jako numer sezonu
+    parser.add_handler(
+        "seasons",
+        # po literze S bierzemy dwie cyfry, jeśli dalej występuje E lub O
+        regex.compile(r"(?<=\bS)(\d{2})(?=[EO])", regex.IGNORECASE),
+        array(integer)
+    )
+    parser.add_handler(
+        "seasons",
+        # po literze S bierzemy dwie cyfry, jeśli dalej występuje O (np. S01O01)
+        regex.compile(r"(?<=\bS)(\d{2})(?=[Oo])", regex.IGNORECASE),
+        array(integer)
+    )
+    parser.add_handler(
+        "seasons",
+        # po literze S bierzemy dwie cyfry, jeśli dalej występuje ODC (np. S01ODC01)
+        regex.compile(r"(?<=\bS)(\d{2})(?=[Oo][dD][cC])", regex.IGNORECASE),
+        array(integer)
+    )
 
     # Episodes
     parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)e[ .]?[([]?(\d{1,3}(?:[ .-]*(?:[&+]|e){1,2}[ .]?\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
@@ -489,6 +577,55 @@ def add_defaults(parser: Parser):
     parser.add_handler("episodes", regex.compile(r"(?<!\bMovie\s-\s)(?<=\s-\s)\d+(?=\s[-(\s])"), array(integer), {"remove": True, "skipIfAlreadyFound": True})
     parser.add_handler("episodes", regex.compile(r"(?:\W|^)(?:\d+)?(?:e|ep)(\d{1,3})(?:\W|$)", regex.IGNORECASE), array(integer), {"remove": True})
     parser.add_handler("episodes", regex.compile(r"\d+.-.\d+TV", regex.IGNORECASE), range_func, {"remove": True})
+
+
+    # Oryginał: r"(?:[\W\d]|^)\d+[xх][ .]?[([]?(\d{1,3}(?:[ .]?[xх][ .]?\d{1,3})+)(?:\W|$)" (rosyjskie 'х')
+    # Polski odpowiednik: "x" lub "odc"
+    parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)\d+(?:x|odc)[ .]?[([]?(\d{1,3}(?:[ .]?(?:x|odc)[ .]?\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
+
+    # Oryginał: r"(?:[\W\d]|^)(?:episodes?|[Сс]ерии:?)[ .]?[([]?(\d{1,3}(?:[ .+]*[&+][ .]?\d{1,3})+)(?:\W|$)" (rosyjskie 'серии')
+    # Polski odpowiednik: "odcinki"
+    parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)(?:odcinki?|odc\.?)[ .]?[([]?(\d{1,3}(?:[ .+]*[&+][ .]?\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
+
+    # Oryginał: r"[([]?(?:\D|^)(\d{1,3}[ .]?ao[ .]?\d{1,3})[)\]]?(?:\W|$)" ('ao' może być 'až po' - czeski/słowacki, lub 'até o' - portugalski)
+    # Polski odpowiednik: "do" lub "-"
+    parser.add_handler("episodes", regex.compile(r"[([]?(?:\D|^)(\d{1,3}[ .]?(?:do|-)[ .]?\d{1,3})[)\]]?(?:\W|$)", regex.IGNORECASE), range_func)
+
+    # Oryginał: r"(?:[\W\d]|^)(?:e|eps?|episodes?|[Сс]ерии:?|\d+[xх])[ .]*[([]?(\d{1,3}(?:-\d{1,3})+)(?:\W|$)" (rosyjskie)
+    # Polski odpowiednik: "o" (odcinek), "odc", "odcinki"
+    parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)(?:o|odc\.?|odcinki?|\d+(?:x|odc))[ .]*[([]?(\d{1,3}(?:-\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
+
+    # Oryginał: r"[st]\d{1,2}[. ]?[xх-]?[. ]?(?:e|x|х|ep|-|\.)[. ]?(\d{1,4})(?:[abc]|v0?[1-4]|\D|$)" (rosyjskie 'х')
+    parser.add_handler("episodes", regex.compile(r"[st]\d{1,2}[. ]?(?:x|odc|-)?[. ]?(?:o|odc|x|ep|-|\.)[. ]?(\d{1,4})(?:[abc]|v0?[1-4]|\D|$)", regex.IGNORECASE), array(integer), {"remove": True})
+
+    # Oryginał: r"(?:\W|^)(\d{1,3}(?:[ .]*~[ .]*\d{1,3})+)(?:\W|$)" ('~' jako 'do')
+    parser.add_handler("episodes", regex.compile(r"(?:\W|^)(\d{1,3}(?:[ .]*(?:-|do)[ .]*\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
+
+    # Oryginał: r"(?<!(?:seasons?|[Сс]езони?)\W*)(?:[ .([-]|^)(\d{1,3}(?:[ .]?[,&+~][ .]?\d{1,3})+)(?:[ .)\]-]|$)" (rosyjskie 'сезони')
+    parser.add_handler("episodes", regex.compile(r"(?<!(?:sezon(?:y|u|ów)?)\W*)(?:[ .([-]|^)(\d{1,3}(?:[ .]?(?:,|i|oraz|&|\+|do|-)[ .]?\d{1,3})+)(?:[ .)\]-]|$)", regex.IGNORECASE), range_func)
+    parser.add_handler("episodes", regex.compile(r"(?<!(?:sezon(?:y|u|ow)?)\W*)(?:[ .([-]|^)(\d{1,3}(?:[ .]?(?:,|i|oraz|&|\+|do|-)[ .]?\d{1,3})+)(?:[ .)\]-]|$)", regex.IGNORECASE), range_func)
+
+    # Oryginał: r"(?<!(?:seasons?|[Сс]езони?)\W*)(?:[ .([-]|^)(\d{1,3}(?:-\d{1,3})+)(?:[ .)(\]]|-\D|$)" (rosyjskie)
+    parser.add_handler("episodes", regex.compile(r"(?<!(?:sezon(?:y|u|ów)?)\W*)(?:[ .([-]|^)(\d{1,3}(?:-\d{1,3})+)(?:[ .)(\]]|-\D|$)", regex.IGNORECASE), range_func)
+    parser.add_handler("episodes", regex.compile(r"(?<!(?:sezon(?:y|u|ow)?)\W*)(?:[ .([-]|^)(\d{1,3}(?:-\d{1,3})+)(?:[ .)(\]]|-\D|$)", regex.IGNORECASE), range_func)
+
+    # Oryginał: r"(?:\b[ée]p?(?:isode)?|[Ээ]пизод|[Сс]ер(?:ии|ия|\.)?|cap(?:itulo)?|epis[oó]dio)[. ]?[-:#№]?[. ]?(\d{1,4})(?:[abc]|v0?[1-4]|\W|$)" (francuski, rosyjski, hiszpański/portugalski)
+    # Polski odpowiednik: "odcinek", "odc", "część"
+    parser.add_handler("episodes", regex.compile(r"(?:\b(?:odc\.?|odcinek|odcinki)|część|czesc)[. ]?[-:#№]?[. ]?(\d{1,4})(?:[abc]|v0?[1-4]|\W|$)", regex.IGNORECASE), array(integer))
+    parser.add_handler("episodes", regex.compile(r"(?:\b(?:odc\.?|odcinek|odcinki)|czesc)[. ]?[-:#№]?[. ]?(\d{1,4})(?:[abc]|v0?[1-4]|\W|$)", regex.IGNORECASE), array(integer))
+
+
+    # Oryginał: r"\b(\d{1,3})(?:-?я)?[ ._-]*(?:ser(?:i?[iyj]a|\b)|[Сс]ер(?:ии|ия|\.)?)" (rosyjskie/serbskie)
+    # Polski odpowiednik: "1-szy odcinek/seria"
+    parser.add_handler("episodes", regex.compile(r"\b(\d{1,3})(?:-?(?:szy|gi|ci|ty|my|wy|ga|cia|ta|ma|wa))?[ ._-]*(?:odc\.?|odcinek|seria)", regex.IGNORECASE), array(integer))
+
+    # Oryginał: r"(?:\D|^)\d{1,2}[. ]?[xх][. ]?(\d{1,3})(?:[abc]|v0?[1-4]|\D|$)" (rosyjskie 'х')
+    parser.add_handler("episodes", regex.compile(r"(?:\D|^)\d{1,2}[. ]?(?:x|odc)[. ]?(\d{1,3})(?:[abc]|v0?[1-4]|\D|$)", regex.IGNORECASE), array(integer))
+
+    # Oryginał: r"(?<=\D|^)(\d{1,3})[. ]?(?:of|из|iz)[. ]?\d{1,3}(?=\D|$)" (angielskie 'of', rosyjskie 'из', inne słowiańskie 'iz')
+    # Polski odpowiednik: "z"
+    parser.add_handler("episodes", regex.compile(r"(?<=\D|^)(\d{1,3})[. ]?(?:z)[. ]?\d{1,3}(?=\D|$)", regex.IGNORECASE), array(integer))
+
 
     def handle_episodes(context):
         title = context["title"]
