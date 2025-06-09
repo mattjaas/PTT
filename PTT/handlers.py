@@ -427,6 +427,49 @@ def add_defaults(parser: Parser):
     parser.add_handler("complete", regex.compile(r"(?<!A.?|The.?)\bComplete\b", regex.IGNORECASE), boolean, {"remove": True})
     parser.add_handler("complete", regex.compile(r"COMPLETE"), boolean, {"remove": True})
 
+    # === POCZĄTEK SEKCJI Z POLSKIMI REGUŁAMI DLA "COMPLETE" ===
+
+    # Słowa kluczowe inicjujące polską nazwę kolekcji
+    # Możesz rozszerzyć tę listę o inne synonimy
+    polish_collection_prefixes = r"(?:Kolekcja|Zbiór||Zbior|Antologia|Pakiet|Cykl)"
+
+    # Słowa określające typ kolekcji (najczęstsze formy,
+    # głównie mianownik l.poj/mn i dopełniacz l.mn).
+    # Możesz rozszerzyć tę listę o inne typy lub formy gramatyczne.
+    polish_collection_nouns = (
+        r"(?:film(?:ów|ow)?|serial(?:i|ów|ow)?|odcink(?:i|ów|ow)?"
+        r"|części|sezon(?:y|ów|ow)?"
+        r"|komiks(?:y|ów|ow)?"
+        r"|bajek|bajki" # bajek (D.lm), bajki (M.lm)
+        r"|trylogi(?:a|i)" # trylogia (M.lp), trylogii (D.lp)
+        r"|sag(?:a|i)"     # saga (M.lp), sagi (D.lp)
+        r"|wydani(?:e|a|ń|n))" # wydanie (M.lp), wydania (M.lm), wydań (D.lm)
+    )
+
+    # Handler dla fraz typu "Kolekcja filmów Batman..." oraz "Kolekcja Batman..." na początku tytułu.
+    # Usuwa całą frazę np. "Kolekcja filmów" lub samo "Kolekcja".
+    parser.add_handler(
+        "complete",
+        regex.compile(
+            # ^\s*                     - początek stringa, opcjonalne spacje
+            # (?:{prefixes})           - dopasuj jedno ze słów kluczowych (np. "Kolekcja") (grupa nieprzechwytująca)
+            # (?:                      - początek opcjonalnej grupy dla typu kolekcji (grupa nieprzechwytująca)
+            #   \s+                   - wymagana spacja oddzielająca
+            #   (?:{nouns})\b         - dopasuj jedno ze słów określających typ (np. "filmów") z granicą słowa
+            # )?                       - cała grupa typu kolekcji jest opcjonalna
+            # \b                       - granica słowa na końcu całej dopasowanej frazy
+            #                           (np. po "Kolekcja" lub po "Kolekcja filmów")
+            rf"^\s*(?:{polish_collection_prefixes})(?:\s+(?:{polish_collection_nouns})\b)?\b",
+            regex.IGNORECASE
+        ),
+        boolean,  # Transformer ustawia wartość na True
+        {"remove": True, "skipIfAlreadyFound": False}
+    )
+
+    # Istniejące, bardziej ogólne polskie reguły dla "complete" (np. samo "KOMPLETNY")
+    # powinny być tutaj lub później.
+    # Poniżej przykłady z Twojego oryginalnego kodu, które zostają:
+
     # Oryginał: r"\b(?:INTEGRALE?|INTÉGRALE?)\b" (francuski)
     # Polskie odpowiedniki dla "kompletny", "całość"
     parser.add_handler("complete", regex.compile(r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CAŁY|CAŁA|CAŁE|CAŁOŚĆ|KOMPLET)\b", regex.IGNORECASE), boolean, {"remove": True, "skipIfAlreadyFound": False})
@@ -434,8 +477,9 @@ def add_defaults(parser: Parser):
 
     # Oryginał: r"(?:\bthe\W)?(?:\bcomplete|full|all)\b.*\b(?:series|seasons|collection|episodes|set|pack|movies)\b"
     # Polskie odpowiedniki dla "kompletna seria", "wszystkie sezony", "pełna kolekcja", "całe odcinki" itp.
-    parser.add_handler("complete", regex.compile(r"\b(?:komplet(?:ny|na|ne|u)|pełn(?:y|a|e|ej)|cał(?:y|a|e|ości)|wszystkie)\b.*\b(?:seri(?:a|i|e|ał)|sezon(?:y|ów)|kolekc(?:ja|ji)|odcink(?:i|ów)|film(?:y|ów)|części|cz??ści|zestaw|pakiet)\b", regex.IGNORECASE), boolean)
-    parser.add_handler("complete", regex.compile(r"\b(?:komplet(?:ny|na|ne|u)|peln(?:y|a|e|ej)|cal(?:y|a|e|osci)|wszystkie)\b.*\b(?:seri(?:a|i|e|al)|sezon(?:y|ow)|kolekc(?:ja|ji)|odcink(?:i|ow)|film(?:y|ow)|czesci|zestaw|pakiet)\b", regex.IGNORECASE), boolean)
+    # Te reguły są bardziej złożone i szukają kombinacji słów, więc nowa reguła powyżej ich nie zastępuje.
+    parser.add_handler("complete", regex.compile(r"\b(?:komplet(?:ny|na|ne|u)|pełn(?:y|a|e|ej)|cał(?:y|a|e|ości)|wszystkie)\b.*\b(?:seri(?:a|i|e|ał)|sezon(?:y|ów)|kolekc(?:ja|ji)|odcink(?:i|ów)|film(?:y|ów)|części|cz??ści|zestaw|pakiet)\b", regex.IGNORECASE), boolean, {"remove": True})
+    parser.add_handler("complete", regex.compile(r"\b(?:komplet(?:ny|na|ne|u)|peln(?:y|a|e|ej)|cal(?:y|a|e|osci)|wszystkie)\b.*\b(?:seri(?:a|i|e|al)|sezon(?:y|ow)|kolekc(?:ja|ji)|odcink(?:i|ow)|film(?:y|ow)|czesci|zestaw|pakiet)\b", regex.IGNORECASE), boolean, {"remove": True})
 
     # Oryginał: r"\b(?:series|movies?)\b.*\b(?:complete|collection)\b"
     # Polskie odpowiedniki dla "seria kompletna", "filmy kolekcja" itp.
@@ -446,6 +490,7 @@ def add_defaults(parser: Parser):
     # Polski odpowiednik dla "anthology" to "antologia"
     parser.add_handler("complete", regex.compile(r"\bantologi[ai]\b", regex.IGNORECASE), boolean, {"skipIfAlreadyFound": False}) # antologia, antologii
 
+    # === KONIEC SEKCJI Z POLSKIMI REGUŁAMI DLA "COMPLETE" ===
 
     # Seasons
     parser.add_handler("seasons", regex.compile(r"(?:complete\W|seasons?\W|\W|^)((?:s\d{1,2}[., +/\\&-]+)+s\d{1,2}\b)", regex.IGNORECASE), concat_values(range_func), {"remove": True})
