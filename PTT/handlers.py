@@ -434,7 +434,7 @@ def add_defaults(parser: Parser):
 
     # Słowa kluczowe inicjujące polską nazwę kolekcji
     # Możesz rozszerzyć tę listę o inne synonimy
-    polish_collection_prefixes = r"(?:Kolekcja|Zbiór||Zbior|Antologia|Pakiet|Cykl)"
+    polish_collection_prefixes = r"(?:Kolekcja|Zbiór|Zbior|Antologia|Pakiet|Cykl)"
 
     # Słowa określające typ kolekcji (najczęstsze formy,
     # głównie mianownik l.poj/mn i dopełniacz l.mn).
