@@ -367,7 +367,9 @@ def add_defaults(parser: Parser):
     # Channels
     parser.add_handler("channels", regex.compile(r"5[\.\s]1(?:ch|-S\d+)?\b", regex.IGNORECASE), uniq_concat(value("5.1")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("channels", regex.compile(r"\b(?:x[2-4]|5[\W]1(?:x[2-4])?)\b", regex.IGNORECASE), uniq_concat(value("5.1")), {"remove": True, "skipIfAlreadyFound": False})
+    parser.add_handler("channels", regex.compile(r"7[\.\s]1(?:ch|-S\d+)?\b", regex.IGNORECASE), uniq_concat(value("7.1")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("channels", regex.compile(r"\b7[\.\- ]1(.?ch(annel)?)?\b", regex.IGNORECASE), uniq_concat(value("7.1")), {"remove": True, "skipIfAlreadyFound": False})
+    parser.add_handler("channels", regex.compile(r"\b(?:x[2-4]|7[\W]1(?:x[2-4])?)\b", regex.IGNORECASE), uniq_concat(value("7.1")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("channels", regex.compile(r"\+?2[\.\s]0(?:x[2-4])?\b", regex.IGNORECASE), uniq_concat(value("2.0")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("channels", regex.compile(r"\b2\.0\b", regex.IGNORECASE), uniq_concat(value("2.0")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("channels", regex.compile(r"\bstereo\b", regex.IGNORECASE), uniq_concat(value("stereo")), {"remove": False, "skipIfAlreadyFound": False})
