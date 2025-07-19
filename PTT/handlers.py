@@ -45,7 +45,7 @@ def handle_site_before_title(context):
     # wzorzec całej domeny z pl/com.pl, www. i wieloma poddomenami
     domain_pattern = (
         r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
-        r'(?:\.(?:com\.)?pl|[\s-]pl)'
+        r'(?:\.(?:com\.)?pl|[\s-]pl|\.?yoyo\.pl)'
     )
 
     # 1) Bracketed: [domena.pl]  lub  {domena.com.pl}  albo  (domena pl)
@@ -60,7 +60,7 @@ def handle_site_before_title(context):
     # 2) Bez nawiasu: tylko strona.pl / example.com.pl / www.strona.pl
     if not m:
         # prostszy wzorzec: dokładnie jedna etykieta + .pl (lub .com.pl)
-        simple_domain = r'(?:www\.)?[\w-]+\.(?:com\.)?pl'
+        simple_domain = r'(?:www\.)?[\w-]+\.(?:com\.)?pl|(?:[\w-]+\.)?yoyo\.pl'
         # po domain musi być spacja lub '-' lub '_'
         m = regex.search(
             rf'^({simple_domain})(?:\s+|[-_])\s*',
@@ -181,7 +181,7 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "cleanup",
         regex.compile(
-            r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|pl[ _.\-]?sub|pl[ _.\-]?subbed|plsub|plsubbed|subbedpl|napisypl|yoyo.pl)\b",
+            r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|pl[ _.\-]?sub|pl[ _.\-]?subbed|plsub|plsubbed|subbedpl|napisypl)\b",
             regex.IGNORECASE
         ),
         boolean,
