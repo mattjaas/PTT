@@ -181,7 +181,7 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "cleanup",
         regex.compile(
-            r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|pl[ _.\-]?sub|pl[ _.\-]?subbed|plsub|plsubbed|subbedpl|napisypl)\b",
+            r"\b(?:sub[ _.\-]?eng[ _.\-]?pl|sub[ _.\-]?pl|pl[ _.\-]?sub|pl[ _.\-]?subbed|plsub|plsubbed|subbedpl|napisypl|yoyo.pl)\b",
             regex.IGNORECASE
         ),
         boolean,
