@@ -42,45 +42,37 @@ def handle_trash_after_markers(context):
 def handle_site_before_title(context):
     text = context["title"]
 
-    # pełny wzorzec domeny, np. www.site.pl, site.com.pl, abc.yoyo.pl
+    # wzorzec całej domeny z pl/com.pl, www. i wieloma poddomenami
     domain_pattern = (
         r'(?:www\.)?[\w-]+(?:\.[\w-]+)*'
-        r'(?:\.(?:com\.)?pl|\.yoyo\.pl|[\s-]pl)'
+        r'(?:\.(?:com\.)?pl|[\s-]pl|\.?yoyo\.pl)'
     )
 
-    # 1) Bracketed at beginning
+    # 1) Bracketed: [domena.pl]  lub  {domena.com.pl}  albo  (domena pl)
     m = regex.search(
-        rf'^[\(\[\{{]\s*({domain_pattern})\s*[\)\]\}}]\s*',
+        rf'^[\(\[\{{]\s*'
+        rf'({domain_pattern})'
+        rf'\s*[\)\]\}}]\s*',    # zamknięcie nawiasu + ewentualne spacje
         text,
         regex.IGNORECASE
     )
-    
-    # 2) Plain domain at beginning
+
+    # 2) Bez nawiasu: tylko strona.pl / example.com.pl / www.strona.pl
     if not m:
+        # prostszy wzorzec: dokładnie jedna etykieta + .pl (lub .com.pl)
         simple_domain = r'(?:www\.)?[\w-]+\.(?:com\.)?pl|(?:[\w-]+\.)?yoyo\.pl'
+        # po domain musi być spacja lub '-' lub '_'
         m = regex.search(
             rf'^({simple_domain})(?:\s+|[-_])\s*',
             text,
             regex.IGNORECASE
         )
-    
-    # 3) Final position — must start with www and end with .pl
-    if not m:
-        final_domain = (
-            r'www\.[\w-]+(?:\.[\w-]+)*\.(?:com\.)?pl|www\.[\w-]+\.(?:yoyo\.pl)'
-        )
-        m = regex.search(
-            rf'(?:[-–—]\s*)({final_domain})\s*$',
-            text,
-            regex.IGNORECASE
-        )
+        if not m:
+            return None
 
-    if not m:
-        return None
-
-    raw        = m.group(0)
-    site_start = m.start()
-    val        = m.group(1).strip()
+    raw        = m.group(0)        # np. "[Audio PL] " lub "best-torrents pl - "
+    site_start = m.start()         # powinno być 0
+    val        = m.group(1).strip()  # np. "Audio PL" lub "best-torrents pl"
 
     return {
         "raw_match": raw,
