@@ -100,6 +100,16 @@ def add_defaults(parser: Parser):
         parser.context["_skip_languages_until_title"] = True
         result = original_parse(cleaned, *args, **kwargs)
 
+        # Fallback: jeśli tytuł zwinął się do samej liczby, a oryginał zaczyna się "NNNN Słowo(≥3)"
+        # to odtwórz frazę od początku do pierwszego nawiasu/kwadratu/klamry.
+        if isinstance(result.get("title"), str) and regex.fullmatch(r"\d{1,4}", result["title"].strip()):
+            m = regex.match(
+                r"^\s*(\d{1,4}\s+[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]{3}[^\[\]\(\)\{\}]*)",
+                cleaned
+            )
+            if m:
+                result["title"] = m.group(1).strip(" .-_")
+        
         # 3) wgrywamy site do finalnego wyniku, jeśli mamy je w kontekście
         if "site" in parser.context:
             result["site"] = parser.context.pop("site")
