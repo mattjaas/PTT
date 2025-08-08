@@ -697,6 +697,18 @@ def add_defaults(parser: Parser):
             matches = beginning_pattern.search(beginning_title) or middle_pattern.search(middle_title)
 
             if matches:
+                # PO DOPASOWANIU: pozwól sufiksy epów (a, b, v\d, .\d),
+                # ale odrzuć, gdy po liczbie zaczyna się słowo z ≥3 liter (np. "Years")
+                after_src = beginning_title if matches.re is beginning_pattern else middle_title
+                after = after_src[matches.end(1):]  # wszystko po złapanej liczbie
+            
+                allowed_suffix = regex.compile(r"\s*(?:a|b|v\d+|\.\d+)(?:\W|$)", regex.IGNORECASE)
+            
+                if allowed_suffix.match(after):
+                    pass  # prawdziwy ep: 12a, 10b, 22v2, 03.1 itd.
+                elif regex.match(r"\s*[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż]{3,}", after):
+                    return None  # zaczyna się słowo 3+ liter (" Years"), więc to nie epizod
+            
                 episode_numbers = [int(num) for num in regex.findall(r"\d+", matches.group(1))]
                 result["episodes"] = episode_numbers
                 return {"match_index": title.index(matches.group(0))}
