@@ -802,7 +802,26 @@ def add_defaults(parser: Parser):
     parser.add_handler("languages", regex.compile(r"\blatvian\b", regex.IGNORECASE), uniq_concat(value("lv")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bestonian\b", regex.IGNORECASE), uniq_concat(value("et")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\b(polish|polon[eê]s|polaco)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
-    parser.add_handler("languages", regex.compile(r"\b(PLDUB|DUBPL|DubbingPL|PLDubbing|LekPL|LektorPL|PLLektor|Lektor)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"remove": True, "skipIfAlreadyFound": False})
+    parser.add_handler(
+        "languages",
+        regex.compile(
+            r"""
+            \b(?:
+                  PLDUB(?![\s._-]*MD\b)
+                | DUBPL(?![\s._-]*MD\b)
+                | DubbingPL(?![\s._-]*MD\b)
+                | PLDubbing(?![\s._-]*MD\b)
+                | LekPL
+                | LektorPL
+                | PLLektor
+                | Lektor
+            )\b
+            """,
+            regex.IGNORECASE | regex.VERBOSE
+        ),
+        uniq_concat(value("pl")),
+        {"remove": True, "skipIfAlreadyFound": False}
+    )
     parser.add_handler(
         "languages",
         regex.compile(r"(Polski Dubbing|Dubbing ?i ?napisy|Dubbing ?DDP ?5.1 ?i ?Napisy|Dubbing ?5.1 ?i ?Napisy|Dubbing ?DDP ?i ?Napisy|Dubbing ?DD ?5.1 ?i ?Napisy)", regex.IGNORECASE),
@@ -920,11 +939,13 @@ def add_defaults(parser: Parser):
     parser.add_handler(
         "languages",
         regex.compile(
-            r"""(?<!(?:napisy[\s._|\-]*
-                        (?:google[\s._|\-]*tłumacz|translator)?  # opcjonalny „google tłumacz” lub „translator”
-                        [\s._|\-]*
-                    ))
-                \b(?:PL|pol)\b
+            r"""
+            (?<!(?:napisy[\s._|\-]*
+                   (?:google[\s._|\-]*tłumacz|translator)?
+                   [\s._|\-]*
+               ))
+            \b(?:PL|pol)\b
+            (?![\s._|\-]*kinowy\b)   # jeśli po PL jest „Kinowy”, to NIE ustawiaj 'pl'
             """,
             regex.IGNORECASE | regex.VERBOSE
         ),
