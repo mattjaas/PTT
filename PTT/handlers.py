@@ -807,10 +807,10 @@ def add_defaults(parser: Parser):
         regex.compile(
             r"""
             \b(?:
-                  PLDUB(?![\s._-]*MD\b)
-                | DUBPL(?![\s._-]*MD\b)
-                | DubbingPL(?![\s._-]*MD\b)
-                | PLDubbing(?![\s._-]*MD\b)
+                  PLDUB(?![\s._\-|\]\)\(\[\}\{]*MD\b)
+                | DUBPL(?![\s._\-|\]\)\(\[\}\{]*MD\b)
+                | DubbingPL(?![\s._\-|\]\)\(\[\}\{]*MD\b)
+                | PLDubbing(?![\s._\-|\]\)\(\[\}\{]*MD\b)
                 | LekPL
                 | LektorPL
                 | PLLektor
