@@ -940,12 +940,18 @@ def add_defaults(parser: Parser):
         "languages",
         regex.compile(
             r"""
+            # wyjątek: nie łap 'PL|pol', jeśli wcześniej było "napisy ... (google tłumacz|translator) ..."
             (?<!(?:napisy[\s._|\-]*
                    (?:google[\s._|\-]*tłumacz|translator)?
-                   [\s._|\-]*
-               ))
+                   [\s._|\-]*))
+    
+            # NIE może być "Kinowy" tuż PRZED 'PL|pol' (z dowolnymi separatorami / nawiasami)
+            (?<!kinowy[\s._\-|\]\)\(\[\}\{]*)
+    
             \b(?:PL|pol)\b
-            (?![\s._|\-]*kinowy\b)   # jeśli po PL jest „Kinowy”, to NIE ustawiaj 'pl'
+    
+            # NIE może być "Kinowy" tuż PO 'PL|pol' (z dowolnymi separatorami / nawiasami)
+            (?![\s._\-|\]\)\(\[\}\{]*kinowy\b)
             """,
             regex.IGNORECASE | regex.VERBOSE
         ),
