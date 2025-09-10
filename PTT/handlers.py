@@ -203,6 +203,13 @@ def add_defaults(parser: Parser):
         boolean,
         {"remove": True}
     )
+
+    parser.add_handler(
+        "cleanup",
+        regex.compile(r"(?i)(?:[\[\(\{]\s*)?napisy[\s._\-]*ai[\s._\-]*pl(?:\s*[\]\)\}])?"),
+        boolean,
+        {"remove": True}
+    )
     
     # Trash (Equivalent to RTN auto-trasher) - DO NOT REMOVE HERE!
     # This one is pretty strict, but it removes a lot of the garbage
@@ -944,6 +951,9 @@ def add_defaults(parser: Parser):
             (?<!(?:napisy[\s._|\-]*
                    (?:google[\s._|\-]*tłumacz|translator)?
                    [\s._|\-]*))
+
+            # nie łap 'PL|pol', jeśli wcześniej jest "napisy ... ai ..."
+            (?<!(?:napisy[\s._|\-]*ai[\s._|\-]*))
     
             # NIE może być "Kinowy" tuż PRZED 'PL|pol' (z dowolnymi separatorami / nawiasami)
             (?<!kinowy[\s._\-|\]\)\(\[\}\{]*)
