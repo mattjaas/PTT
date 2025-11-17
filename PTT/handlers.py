@@ -84,6 +84,11 @@ def handle_site_before_title(context):
 
 def add_defaults(parser: Parser):
     # ———————— PREPROCESSOR ————————  
+    # Specjalny wzorzec: "The Office PL" lub "The.Office.PL"
+    office_pl_pattern = regex.compile(
+        r"(?i)(?<!\w)The[ .]Office[ .]PL(?!\w)"
+    )
+
     original_parse = parser.parse
 
     def parse_wrapper(raw_title, *args, **kwargs):
@@ -109,12 +114,19 @@ def add_defaults(parser: Parser):
             )
             if m:
                 result["title"] = m.group(1).strip(" .-_")
-        
+
+        # >>> SPECJALNY WYJĄTEK DLA "The Office PL" <<<
+        # Jeśli w surowym tytule jest "The Office PL" lub "The.Office.PL",
+        # wymuszamy title = "The Office PL".
+        # "PL" zostało już złapane przez handlery językowe → languages zawiera "pl".
+        if office_pl_pattern.search(cleaned):
+            result["title"] = "The Office PL"
+
         # 3) wgrywamy site do finalnego wyniku, jeśli mamy je w kontekście
         if "site" in parser.context:
             result["site"] = parser.context.pop("site")
         return result
-    
+
     parser.parse = parse_wrapper
     
     """
@@ -809,6 +821,20 @@ def add_defaults(parser: Parser):
     parser.add_handler("languages", regex.compile(r"\blatvian\b", regex.IGNORECASE), uniq_concat(value("lv")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\bestonian\b", regex.IGNORECASE), uniq_concat(value("et")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
     parser.add_handler("languages", regex.compile(r"\b(polish|polon[eê]s|polaco)\b", regex.IGNORECASE), uniq_concat(value("pl")), {"skipIfFirst": True, "skipIfAlreadyFound": False})
+    # Frazy typu "serial polski", "polski serial", "film polski", "polski film"
+    # (zamiast spacji mogą być kropki) → język PL i USUWAMY z tytułu.
+    parser.add_handler(
+        "languages",
+        regex.compile(r"\b(?:serial|film)[ .]polski\b", regex.IGNORECASE),
+        uniq_concat(value("pl")),
+        {"remove": True, "skipIfAlreadyFound": False}
+    )
+    parser.add_handler(
+        "languages",
+        regex.compile(r"\bpolski[ .](?:serial|film)\b", regex.IGNORECASE),
+        uniq_concat(value("pl")),
+        {"remove": True, "skipIfAlreadyFound": False}
+    )
     parser.add_handler(
         "languages",
         regex.compile(
