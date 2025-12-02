@@ -500,6 +500,15 @@ def add_defaults(parser: Parser):
         {"remove": True, "skipIfAlreadyFound": False}
     )
 
+    # Specjalna polska fraza oznaczająca kolekcję filmową: "Filmy Świąteczne"
+    # (uwzględnia też wariant bez ogonków: "Filmy Swiateczne")
+    parser.add_handler(
+        "complete",
+        regex.compile(r"\bFilmy[\s._-]+(?:Świąteczne|Swiateczne)\b", regex.IGNORECASE),
+        boolean,
+        {"remove": True, "skipIfAlreadyFound": False}
+    )
+
     # Istniejące, bardziej ogólne polskie reguły dla "complete" (np. samo "KOMPLETNY")
     # powinny być tutaj lub później.
     # Poniżej przykłady z Twojego oryginalnego kodu, które zostają:
