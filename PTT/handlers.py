@@ -982,12 +982,17 @@ def add_defaults(parser: Parser):
         "languages",
         regex.compile(
             r"""
+            # wyjątek: nie łap 'PL|pol', jeśli wcześniej było "napisy ... multi ... (PL|pol)"
+            # przykłady, które mają NIE ustawiać languages=pl:
+            #   "Napisy-Multi PL", "napisy.multi.PL", "[napisy|multi|pl]"
+            (?<!(?:napisy[\s._\-|\]\)\(\[\}\{]*multi[\s._\-|\]\)\(\[\}\{]*))
+    
             # wyjątek: nie łap 'PL|pol', jeśli wcześniej było "napisy ... (google tłumacz|translator) ..."
             (?<!(?:napisy[\s._|\-]*
                    (?:google[\s._|\-]*tłumacz|translator)?
                    [\s._|\-]*))
-
-            # nie łap 'PL|pol', jeśli wcześniej jest "napisy ... ai ..."
+    
+            # wyjątek: nie łap 'PL|pol', jeśli wcześniej jest "napisy ... ai ..."
             (?<!(?:napisy[\s._|\-]*ai[\s._|\-]*))
     
             # NIE może być "Kinowy" tuż PRZED 'PL|pol' (z dowolnymi separatorami / nawiasami)
