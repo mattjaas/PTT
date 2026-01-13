@@ -222,6 +222,15 @@ def add_defaults(parser: Parser):
         boolean,
         {"remove": True}
     )
+    parser.add_handler(
+        "cleanup",
+        regex.compile(
+            r"\bnapisy[\s._\-|\]\)\(\[\}\{]*multi[\s._\-|\]\)\(\[\}\{]*\d+[\s._\-|\]\)\(\[\}\{]*(?:pl|pol)\b",
+            regex.IGNORECASE
+        ),
+        boolean,
+        {"remove": True}
+    )
     
     # Trash (Equivalent to RTN auto-trasher) - DO NOT REMOVE HERE!
     # This one is pretty strict, but it removes a lot of the garbage
