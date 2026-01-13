@@ -986,13 +986,12 @@ def add_defaults(parser: Parser):
             # przykłady, które mają NIE ustawiać languages=pl:
             #   "Napisy-Multi PL", "napisy.multi.PL", "[napisy|multi|pl]"
             (?<!(?:napisy[\s._\-|\]\)\(\[\}\{]*multi[\s._\-|\]\)\(\[\}\{]*))
-            
-            # --- NOWY WYJĄTEK TUTAJ ---
-            # Wyjątek: nie łap 'PL', jeśli sekwencja to Napisy -> Multi -> Cyfra -> PL
-            # np. "Napisy.Multi.2.PL" (oznacza drugą wersję napisów, a nie audio PL)
-            (?<!napisy[\s._\-|\]\)\(\[\}\{]*multi[\s._\-|\]\)\(\[\}\{]*\d+[\s._\-|\]\)\(\[\}\{]*)
-            # --------------------------
-
+    
+            # NOWY WYJĄTEK: nie łap 'PL|pol', jeśli wcześniej było "napisy ... multi ... <cyfra> ... (PL|pol)"
+            # przykłady:
+            #   "Napisy.Multi.1.PL", "napisy-multi-2-pl", "[napisy|multi|3|PL]"
+            (?<!(?:napisy[\s._\-|\]\)\(\[\}\{]*multi[\s._\-|\]\)\(\[\}\{]*\d+[\s._\-|\]\)\(\[\}\{]*))
+    
             # wyjątek: nie łap 'PL|pol', jeśli wcześniej było "napisy ... (google tłumacz|translator) ..."
             (?<!(?:napisy[\s._|\-]*
                    (?:google[\s._|\-]*tłumacz|translator)?
