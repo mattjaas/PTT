@@ -527,6 +527,7 @@ def add_defaults(parser: Parser):
     def handle_polish_complete_words(context):
         title = context["title"]
         result = context["result"]
+        matched = context.get("matched", {})
     
         m = regex.search(
             r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CAŁY|CAŁA|CAŁE|CAŁOŚĆ|KOMPLET)\b",
@@ -536,20 +537,9 @@ def add_defaults(parser: Parser):
         if not m:
             return None
     
-        # zakres lat ma być dozwolony, np. 1999-2004 albo 1999-04
-        has_year_range = regex.search(
-            r"\b(?:19\d{2}|20\d{2}|2100)\s*-\s*(?:\d{2}|19\d{2}|20\d{2}|2100)\b",
-            title
-        )
-    
-        # pojedynczy rok, np. 1975 / 2015
-        has_single_year = regex.search(
-            r"\b(?:19\d{2}|20\d{2}|2100)\b",
-            title
-        )
-    
-        # tylko przy pojedynczym roku blokujemy te ogólne polskie słowa
-        if has_single_year and not has_year_range:
+        # Jeśli parser wcześniej wykrył pojedynczy rok,
+        # to te ogólne polskie słowa NIE mają ustawiać complete=True.
+        if result.get("year") is not None or matched.get("year") is not None:
             return None
     
         result["complete"] = True
@@ -563,6 +553,7 @@ def add_defaults(parser: Parser):
     def handle_polish_complete_words_ascii(context):
         title = context["title"]
         result = context["result"]
+        matched = context.get("matched", {})
     
         m = regex.search(
             r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CALY|CALA|CALE|CALOSC|KOMPLET)\b",
@@ -572,20 +563,9 @@ def add_defaults(parser: Parser):
         if not m:
             return None
     
-        # zakres lat ma być dozwolony, np. 1999-2004 albo 1999-04
-        has_year_range = regex.search(
-            r"\b(?:19\d{2}|20\d{2}|2100)\s*-\s*(?:\d{2}|19\d{2}|20\d{2}|2100)\b",
-            title
-        )
-    
-        # pojedynczy rok, np. 1975 / 2015
-        has_single_year = regex.search(
-            r"\b(?:19\d{2}|20\d{2}|2100)\b",
-            title
-        )
-    
-        # tylko przy pojedynczym roku blokujemy te ogólne polskie słowa
-        if has_single_year and not has_year_range:
+        # Jeśli parser wcześniej wykrył pojedynczy rok,
+        # to te ogólne polskie słowa NIE mają ustawiać complete=True.
+        if result.get("year") is not None or matched.get("year") is not None:
             return None
     
         result["complete"] = True
