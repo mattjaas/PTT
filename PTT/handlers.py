@@ -691,7 +691,43 @@ def add_defaults(parser: Parser):
         regex.compile(r"(?<=\bS)(\d{2})(?=[Oo][dD][cC])", regex.IGNORECASE),
         array(integer)
     )
+    
+    def handle_bare_polish_full_season(context):
+        title = context["title"]
+        result = context["result"]
 
+        # Nie nadpisuj, jeśli sezon już został wcześniej wykryty
+        if result.get("seasons"):
+            return None
+
+        m = regex.search(
+            r"\b(?:(?:cały|caly)\s+sezon|sezon\s+(?:cały|caly))\b",
+            title,
+            regex.IGNORECASE
+        )
+        if not m:
+            return None
+
+        before = title[:m.start()]
+        after = title[m.end():]
+
+        # Jeśli bezpośrednio PRZED frazą jest cyfra (ew. przez spacje/separatory), to nie ustawiaj season 1
+        if regex.search(r"\d[\s._\-|\]\)\(\[\}\{]*$", before):
+            return None
+
+        # Jeśli bezpośrednio PO frazie jest cyfra (ew. przez spacje/separatory), to nie ustawiaj season 1
+        if regex.match(r"^[\s._\-|\]\)\(\[\}\{]*\d", after):
+            return None
+
+        result["seasons"] = [1]
+        return {
+            "raw_match": m.group(0),
+            "match_index": m.start(),
+            "remove": True
+        }
+
+    parser.add_handler("seasons", handle_bare_polish_full_season, {"skipIfAlreadyFound": True})
+    
     # Episodes
     parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)e[ .]?[([]?(\d{1,3}(?:[ .-]*(?:[&+]|e){1,2}[ .]?\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
     parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)ep[ .]?[([]?(\d{1,3}(?:[ .-]*(?:[&+]|ep){1,2}[ .]?\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
