@@ -524,61 +524,45 @@ def add_defaults(parser: Parser):
 
     # Oryginał: r"\b(?:INTEGRALE?|INTÉGRALE?)\b" (francuski)
     # Polskie odpowiedniki dla "kompletny", "całość"
-def handle_polish_complete_words(context):
-    title = context["title"]
-
-    # Zakres lat ma zostać legalny, np. 1999-2004 albo 1999-04
-    has_year_range = regex.search(
-        r"\b(?:19\d{2}|20\d{2}|2100)\s*-\s*(?:\d{2}|19\d{2}|20\d{2}|2100)\b",
-        title
-    )
-
-    # Pojedynczy rok, np. 1975 / 2015
-    has_single_year = regex.search(
-        r"\b(?:19\d{2}|20\d{2}|2100)\b",
-        title
-    )
-
-    # Jeśli jest pojedynczy rok i nie ma zakresu lat,
-    # to NIE ustawiaj complete z tych ogólnych polskich słów.
-    if has_single_year and not has_year_range:
-        return None
-
-    m = regex.search(
-        r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CAŁY|CAŁA|CAŁE|CAŁOŚĆ|KOMPLET)\b",
-        title,
-        regex.IGNORECASE
-    )
-    if not m:
-        return None
-
-    return {
-        "raw_match": m.group(0),
-        "match_index": m.start(),
-        "remove": True,
-        "value": True
-    }
-
-
-    def handle_polish_complete_words_ascii(context):
+    def handle_polish_complete_words(context):
         title = context["title"]
+        result = context["result"]
     
-        # Zakres lat ma zostać legalny, np. 1999-2004 albo 1999-04
+        m = regex.search(
+            r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CAŁY|CAŁA|CAŁE|CAŁOŚĆ|KOMPLET)\b",
+            title,
+            regex.IGNORECASE
+        )
+        if not m:
+            return None
+    
+        # zakres lat ma być dozwolony, np. 1999-2004 albo 1999-04
         has_year_range = regex.search(
             r"\b(?:19\d{2}|20\d{2}|2100)\s*-\s*(?:\d{2}|19\d{2}|20\d{2}|2100)\b",
             title
         )
     
-        # Pojedynczy rok, np. 1975 / 2015
+        # pojedynczy rok, np. 1975 / 2015
         has_single_year = regex.search(
             r"\b(?:19\d{2}|20\d{2}|2100)\b",
             title
         )
     
-        # Jeśli jest pojedynczy rok i nie ma zakresu lat,
-        # to NIE ustawiaj complete z tych ogólnych polskich słów.
+        # tylko przy pojedynczym roku blokujemy te ogólne polskie słowa
         if has_single_year and not has_year_range:
             return None
+    
+        result["complete"] = True
+        return {
+            "raw_match": m.group(0),
+            "match_index": m.start(),
+            "remove": True
+        }
+    
+    
+    def handle_polish_complete_words_ascii(context):
+        title = context["title"]
+        result = context["result"]
     
         m = regex.search(
             r"\b(?:KOMPLETNY|KOMPLETNA|KOMPLETNE|CALY|CALA|CALE|CALOSC|KOMPLET)\b",
@@ -588,11 +572,27 @@ def handle_polish_complete_words(context):
         if not m:
             return None
     
+        # zakres lat ma być dozwolony, np. 1999-2004 albo 1999-04
+        has_year_range = regex.search(
+            r"\b(?:19\d{2}|20\d{2}|2100)\s*-\s*(?:\d{2}|19\d{2}|20\d{2}|2100)\b",
+            title
+        )
+    
+        # pojedynczy rok, np. 1975 / 2015
+        has_single_year = regex.search(
+            r"\b(?:19\d{2}|20\d{2}|2100)\b",
+            title
+        )
+    
+        # tylko przy pojedynczym roku blokujemy te ogólne polskie słowa
+        if has_single_year and not has_year_range:
+            return None
+    
+        result["complete"] = True
         return {
             "raw_match": m.group(0),
             "match_index": m.start(),
-            "remove": True,
-            "value": True
+            "remove": True
         }
     
     
