@@ -773,6 +773,38 @@ def add_defaults(parser: Parser):
         }
 
     parser.add_handler("seasons", handle_bare_polish_full_season, {"skipIfAlreadyFound": True})
+
+    def handle_polish_season_word_then_range(context):
+        title = context["title"]
+        result = context["result"]
+
+        if result.get("seasons"):
+            return None
+
+        m = regex.search(
+            r"\bsezon(?:y|u|ów|ow)?\b[\s.:_-]*([1-9]\d?)\s*(?:-|–|—|do)\s*([1-9]\d?)\b",
+            title,
+            regex.IGNORECASE
+        )
+        if not m:
+            return None
+
+        start_season = int(m.group(1))
+        end_season = int(m.group(2))
+
+        if start_season > end_season:
+            start_season, end_season = end_season, start_season
+
+        result["seasons"] = list(range(start_season, end_season + 1))
+        result.pop("episodes", None)
+
+        return {
+            "raw_match": m.group(0),
+            "match_index": m.start(),
+            "remove": True
+        }
+
+    parser.add_handler("seasons", handle_polish_season_word_then_range, {"skipIfAlreadyFound": True})
     
     # Episodes
     parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)e[ .]?[([]?(\d{1,3}(?:[ .-]*(?:[&+]|e){1,2}[ .]?\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
