@@ -606,7 +606,53 @@ def add_defaults(parser: Parser):
     parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?season[. ]?[([]?((?:\d{1,2}[. -]+)+[1-9]\d?\b)[)\]]?(?!.*\.\w{2,4}$)", regex.IGNORECASE), concat_values(range_func), {"remove": True})
     parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?\bseasons?\b[. -]?(\d{1,2}[. -]?(?:to|thru|and|\+|:)[. -]?\d{1,2})\b", regex.IGNORECASE), concat_values(range_func), {"remove": True})
     parser.add_handler("seasons", regex.compile(r"(?:(?:\bthe\W)?\bcomplete\W)?(?:saison|seizoen|season|series|temp(?:orada)?):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
-    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?й)?[. _]?(?:[Сс]езон|sez(?:on)?)(?:\W?\D|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
+    def handle_polish_season_count_or_range(context):
+        title = context["title"]
+        result = context["result"]
+
+        if result.get("seasons"):
+            return None
+
+        # Najpierw zakres: "2-4 sezony", "2 - 4 sezony", "2 do 4 sezony"
+        m_range = regex.search(
+            r"\b(\d{1,2})\s*(?:-|–|—|do)\s*(\d{1,2})\s+sezon(?:y|ów|ow)\b",
+            title,
+            regex.IGNORECASE
+        )
+        if m_range:
+            start_season = int(m_range.group(1))
+            end_season = int(m_range.group(2))
+
+            if start_season > end_season:
+                start_season, end_season = end_season, start_season
+
+            result["seasons"] = list(range(start_season, end_season + 1))
+            return {
+                "raw_match": m_range.group(0),
+                "match_index": m_range.start(),
+                "remove": True
+            }
+
+        # Potem liczba mnoga: "3 sezony", "3 sezonów"
+        m_plural = regex.search(
+            r"\b(\d{1,2})\s+sezon(?:y|ów|ow)\b",
+            title,
+            regex.IGNORECASE
+        )
+        if m_plural:
+            count = int(m_plural.group(1))
+            if count >= 1:
+                result["seasons"] = list(range(1, count + 1))
+                return {
+                    "raw_match": m_plural.group(0),
+                    "match_index": m_plural.start(),
+                    "remove": True
+                }
+
+        return None
+
+    parser.add_handler("seasons", handle_polish_season_count_or_range, {"skipIfAlreadyFound": True})
+    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?й)?[. _]?(?:[Сс]езон|sez(?:on)?)\b(?:\W|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
     parser.add_handler("seasons", regex.compile(r"[Сс]езон:?[. _]?№?(\d{1,2})(?!\d)", regex.IGNORECASE), concat_values(integer), {"remove": True})
     parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})Â?[°ºªa]?[. ]*temporada", regex.IGNORECASE), concat_values(integer), {"remove": True})
     parser.add_handler("seasons", regex.compile(r"t(\d{1,3})(?:[ex]+|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
@@ -652,75 +698,11 @@ def add_defaults(parser: Parser):
     # Polski odpowiednik: "sezon", "seria"
     parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii)):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
     parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii)):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
-
-    def handle_polish_number_before_season_word(context):
-        title = context["title"]
-        result = context["result"]
-
-        # Nie nadpisuj, jeśli sezony już wykryto wcześniej
-        if result.get("seasons"):
-            return None
-
-        # 1) Najpierw zakres typu "2-4 sezony", "2 - 4 sezony", "2 do 4 sezony"
-        m_range = regex.search(
-            r"\b(\d{1,2})\s*(?:-|–|—|do)\s*(\d{1,2})\s+sezon(?:y|ów|ow)\b",
-            title,
-            regex.IGNORECASE
-        )
-        if m_range:
-            start_season = int(m_range.group(1))
-            end_season = int(m_range.group(2))
-
-            if start_season > end_season:
-                start_season, end_season = end_season, start_season
-
-            result["seasons"] = list(range(start_season, end_season + 1))
-            return {
-                "raw_match": m_range.group(0),
-                "match_index": m_range.start(),
-                "remove": True
-            }
-
-        # 2) Potem liczba przed liczbą mnogą:
-        # "3 sezony" / "3 sezony" / "3 sezonów"
-        m_plural = regex.search(
-            r"\b(\d{1,2})\s+sezon(?:y|ów|ow)\b",
-            title,
-            regex.IGNORECASE
-        )
-        if m_plural:
-            count = int(m_plural.group(1))
-            if count >= 1:
-                result["seasons"] = list(range(1, count + 1))
-                return {
-                    "raw_match": m_plural.group(0),
-                    "match_index": m_plural.start(),
-                    "remove": True
-                }
-
-        # 3) Na końcu liczba przed liczbą pojedynczą:
-        # "3 sezon" -> [3]
-        m_single = regex.search(
-            r"\b(\d{1,2})\s+sezon\b",
-            title,
-            regex.IGNORECASE
-        )
-        if m_single:
-            result["seasons"] = [int(m_single.group(1))]
-            return {
-                "raw_match": m_single.group(0),
-                "match_index": m_single.start(),
-                "remove": True
-            }
-
-        return None
-
-    parser.add_handler("seasons", handle_polish_number_before_season_word, {"skipIfAlreadyFound": True})
     
     # Oryginał: r"(\d{1,2})(?:-?й)?[. _]?(?:[Сс]езон|sez(?:on)?)(?:\W?\D|$)" (rosyjski)
     # Polski odpowiednik, np. "1-szy sezon", "2-gi sezon"
-    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?[sS][zZ][yY]|[gG][iI]|[cC][iI]|[tT][yY])?[. _]?(?:sezon)(?:\W?\D|$)", regex.IGNORECASE), concat_values(integer), {"remove": True}) # np. 1-szy, 2-gi, 3-ci, 4-ty
-    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?[sS][zZ][yY]|[gG][iI]|[cC][iI]|[tT][yY])?[. _]?(?:sezon)(?:\W?\D|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?[sS][zZ][yY]|[gG][iI]|[cC][iI]|[tT][yY])?[. _]?(?:sezon)\b(?:\W|$)", regex.IGNORECASE), concat_values(integer), {"remove": True}) # np. 1-szy, 2-gi, 3-ci, 4-ty
+    parser.add_handler("seasons", regex.compile(r"(\d{1,2})(?:-?[sS][zZ][yY]|[gG][iI]|[cC][iI]|[tT][yY])?[. _]?(?:sezon)\b(?:\W|$)", regex.IGNORECASE), concat_values(integer), {"remove": True})
 
     # Oryginał: r"[Сс]езон:?[. _]?№?(\d{1,2})(?!\d)" (rosyjski)
     # Polski odpowiednik: "Sezon nr X"
@@ -728,8 +710,8 @@ def add_defaults(parser: Parser):
 
     # Oryginał: r"(?:\D|^)(\d{1,2})Â?[°ºªa]?[. ]*temporada" (hiszpański/portugalski)
     # Polski odpowiednik: "1-szy sezon"
-    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})(?:-?[sS][zZ][yY]|[gG][aA]|[cC][iI]|[tT][aA])?[. ]*sezon", regex.IGNORECASE), concat_values(integer), {"remove": True}) # np. 1-szy, 2-ga, 3-ci, 4-ta
-    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})(?:-?[sS][zZ][yY]|[gG][aA]|[cC][iI]|[tT][aA])?[. ]*sezon", regex.IGNORECASE), concat_values(integer), {"remove": True})
+    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})(?:-?[sS][zZ][yY]|[gG][aA]|[cC][iI]|[tT][aA])?[. ]*sezon\b", regex.IGNORECASE), concat_values(integer), {"remove": True}) # np. 1-szy, 2-ga, 3-ci, 4-ta
+    parser.add_handler("seasons", regex.compile(r"(?:\D|^)(\d{1,2})(?:-?[sS][zZ][yY]|[gG][aA]|[cC][iI]|[tT][aA])?[. ]*sezon\b", regex.IGNORECASE), concat_values(integer), {"remove": True})
 
     # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?(?:\W|^)(\d{1,2})[. ]?(?:st|nd|rd|th)[. ]*season"
     # Polskie końcówki liczebników porządkowych
