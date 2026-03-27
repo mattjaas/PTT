@@ -696,8 +696,28 @@ def add_defaults(parser: Parser):
 
     # Oryginał: r"(?:(?:\bthe\W)?\bcomplete\W)?(?:saison|seizoen|season|series|temp(?:orada)?):?[. ]?(\d{1,2})\b" (francuski/holenderski/hiszpański/portugalski)
     # Polski odpowiednik: "sezon", "seria"
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii)):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
-    parser.add_handler("seasons", regex.compile(r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii)):?[. ]?(\d{1,2})\b", regex.IGNORECASE), concat_values(integer))
+    # Obsługuje m.in.:
+    # SEZON 1
+    # SEZON-1
+    # SEZON_1
+    # SEZON:1
+    # sezon - 1
+    parser.add_handler(
+        "seasons",
+        regex.compile(
+            r"(?:(?:\bcały\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii))[\s._:\-]*(\d{1,2})\b",
+            regex.IGNORECASE
+        ),
+        concat_values(integer)
+    )
+    parser.add_handler(
+        "seasons",
+        regex.compile(
+            r"(?:(?:\bcaly\W)?\bkomplet(?:ny|na|ne)\W)?(?:sezon|seria|ser(?:i|ii))[\s._:\-]*(\d{1,2})\b",
+            regex.IGNORECASE
+        ),
+        concat_values(integer)
+    )
     
     # Oryginał: r"(\d{1,2})(?:-?й)?[. _]?(?:[Сс]езон|sez(?:on)?)(?:\W?\D|$)" (rosyjski)
     # Polski odpowiednik, np. "1-szy sezon", "2-gi sezon"
