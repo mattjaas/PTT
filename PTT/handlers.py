@@ -1211,11 +1211,64 @@ def add_defaults(parser: Parser):
 
 
 
+    def handle_nickelodeon_network(context):
+        title = context["title"]
+        result = context["result"]
+    
+        # 1) Pełne "Nickelodeon" wykrywaj zawsze
+        m_full = regex.search(r"\bNickelodeon\b", title, regex.IGNORECASE)
+        if m_full:
+            result["network"] = "Nickelodeon"
+            return {
+                "raw_match": m_full.group(0),
+                "match_index": m_full.start(),
+                "remove": True
+            }
+    
+        # 2) Znajdź pierwszy rok albo zakres lat
+        #    przykłady:
+        #    1999
+        #    1999-2004
+        #    1999-04
+        year_or_range = regex.search(
+            r"\b(?:19\d{2}|20\d{2}|2100)(?:\s*[-–—]\s*(?:19\d{2}|20\d{2}|2100|\d{2}))?\b",
+            title,
+            regex.IGNORECASE
+        )
+    
+        # 3) Jeśli w nazwie jest rok / zakres lat, to "NICK" licz tylko PO nim
+        if year_or_range:
+            suffix = title[year_or_range.end():]
+            m_nick = regex.search(r"\bNICK\b", suffix, regex.IGNORECASE)
+            if not m_nick:
+                return None
+    
+            absolute_start = year_or_range.end() + m_nick.start()
+            result["network"] = "Nickelodeon"
+            return {
+                "raw_match": m_nick.group(0),
+                "match_index": absolute_start,
+                "remove": True
+            }
+    
+        # 4) Jeśli nie ma roku ani zakresu lat, zachowaj stare działanie dla "NICK"
+        m_nick = regex.search(r"\bNICK\b", title, regex.IGNORECASE)
+        if m_nick:
+            result["network"] = "Nickelodeon"
+            return {
+                "raw_match": m_nick.group(0),
+                "match_index": m_nick.start(),
+                "remove": True
+            }
+    
+        return None
+    
+    
     # Networks
     parser.add_handler("network", regex.compile(r"\bATVP?\b", regex.IGNORECASE), value("Apple TV"), {"remove": True})
     parser.add_handler("network", regex.compile(r"\bAMZN\b", regex.IGNORECASE), value("Amazon"), {"remove": True})
     parser.add_handler("network", regex.compile(r"\bNF|Netflix\b", regex.IGNORECASE), value("Netflix"), {"remove": True})
-    parser.add_handler("network", regex.compile(r"\bNICK(elodeon)?\b", regex.IGNORECASE), value("Nickelodeon"), {"remove": True})
+    parser.add_handler("network", handle_nickelodeon_network)
     parser.add_handler("network", regex.compile(r"\bDSNY?P?\b", regex.IGNORECASE), value("Disney"), {"remove": True})
     parser.add_handler("network", regex.compile(r"\bH(MAX|BO)\b", regex.IGNORECASE), value("HBO"), {"remove": True})
     parser.add_handler("network", regex.compile(r"\bHULU\b", regex.IGNORECASE), value("Hulu"), {"remove": True})
