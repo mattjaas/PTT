@@ -1088,6 +1088,7 @@ def add_defaults(parser: Parser):
                 | DubbingPL(?![\s._\-|\]\)\(\[\}\{]*MD\b)
                 | PLDubbing(?![\s._\-|\]\)\(\[\}\{]*MD\b)
                 | LekPL
+                | Lek
                 | LektorPL
                 | PLLektor
                 | Lektor
