@@ -466,6 +466,43 @@ def add_defaults(parser: Parser):
     parser.add_handler("audio", regex.compile(r"\bOPUS(\b|\d)(?!.*[ ._-](\d{3,4}p))"), uniq_concat(value("OPUS")), {"remove": True, "skipIfAlreadyFound": False})
     parser.add_handler("audio", regex.compile(r"\b(H[DQ])?.?(Clean.?Aud(io)?)\b", regex.IGNORECASE), uniq_concat(value("HQ Clean Audio")), {"remove": True, "skipIfAlreadyFound": False})
 
+    # Jeżeli sezon/odcinek został dopasowany PO technicznych tagach typu H264/AAC,
+    # traktujemy go jako część release-group / śmieci, a nie prawdziwy numer sezonu/odcinka.
+    # Przykład: "Nazwa (2026) [DUBPL.1080p.WEB-DL.H264.AAC-S78]" -> S78 nie jest sezonem.
+    def _first_codec_or_audio_marker_index(context):
+        matched = context.get("matched", {})
+        indexes = []
+
+        for key in ("codec", "audio"):
+            comp = matched.get(key)
+            if comp and comp.get("match_index") is not None:
+                indexes.append(comp["match_index"])
+
+        return min(indexes) if indexes else None
+
+    def _drop_if_matched_after_codec_or_audio(context, field):
+        marker_index = _first_codec_or_audio_marker_index(context)
+        if marker_index is None:
+            return None
+
+        matched = context.get("matched", {})
+        comp = matched.get(field)
+        if not comp or comp.get("match_index") is None:
+            return None
+
+        if comp["match_index"] <= marker_index:
+            return None
+
+        context.get("result", {}).pop(field, None)
+        matched.pop(field, None)
+        return None
+
+    def handle_seasons_after_codec_or_audio(context):
+        return _drop_if_matched_after_codec_or_audio(context, "seasons")
+
+    def handle_episodes_after_codec_or_audio(context):
+        return _drop_if_matched_after_codec_or_audio(context, "episodes")
+
     # Group
     parser.add_handler("group", regex.compile(r"- ?(?!\d+$|S\d+|\d+x|ep?\d+|[^[]+]$)([^\-. []+[^\-. [)\]\d][^\-. [)\]]*)(?:\[[\w.-]+])?(?=\.\w{2,4}$|$)", regex.IGNORECASE), none, {"remove": False})
 
@@ -864,6 +901,7 @@ def add_defaults(parser: Parser):
         }
 
     parser.add_handler("seasons", handle_polish_season_word_then_range, {"skipIfAlreadyFound": True})
+    parser.add_handler("seasons", handle_seasons_after_codec_or_audio, {"skipIfAlreadyFound": False})
     
     # Episodes
     parser.add_handler("episodes", regex.compile(r"(?:[\W\d]|^)e[ .]?[([]?(\d{1,3}(?:[ .-]*(?:[&+]|e){1,2}[ .]?\d{1,3})+)(?:\W|$)", regex.IGNORECASE), range_func)
@@ -988,6 +1026,7 @@ def add_defaults(parser: Parser):
         return None
 
     parser.add_handler("episodes", handle_episodes, {"skipIfAlreadyFound": True})
+    parser.add_handler("episodes", handle_episodes_after_codec_or_audio, {"skipIfAlreadyFound": False})
 
     # Country Code
     parser.add_handler("country", regex.compile(r"\b(US|UK|AU|NZ|CA)\b"), value("$1"))
