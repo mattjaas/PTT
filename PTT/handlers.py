@@ -187,8 +187,8 @@ def add_defaults(parser: Parser):
     parser.add_handler("resolution", regex.compile(r"(?:BD|HD|M)1080p?", regex.IGNORECASE), value("1080p"), {"remove": True})
     parser.add_handler("resolution", regex.compile(r"(?:BD|HD|M)720p?", regex.IGNORECASE), value("720p"), {"remove": True})
     parser.add_handler("resolution", regex.compile(r"(?:BD|HD|M)480p?", regex.IGNORECASE), value("480p"), {"remove": True})
-    parser.add_handler("resolution", regex.compile(r"\b(?:UHD|4k|2160p|1080p|720p|480p)(?!.*\b(?:UHD|4k|2160p|1080p|720p|480p)\b)", regex.IGNORECASE), transform_resolution, {"remove": True})
-    parser.add_handler("resolution", regex.compile(r"\b(?:UHD|4k)\b|21600?[pi]\b", regex.IGNORECASE), value("2160p"), {"remove": True})
+    parser.add_handler("resolution", regex.compile(r"\b(?:UHD|4k|21600?[pi])\b(?!.*\b(?:UHD|4k|2160p|1080p|720p|480p)\b)", regex.IGNORECASE), value("2160p"), {"remove": True})
+    parser.add_handler("resolution", regex.compile(r"\b(?:2160p|1080p|720p|480p)(?!.*\b(?:UHD|4k|2160p|1080p|720p|480p)\b)", regex.IGNORECASE), transform_resolution, {"remove": True})
     parser.add_handler("resolution", regex.compile(r"(\d{3,4})[pi]", regex.IGNORECASE), value("$1p"), {"remove": True})
     parser.add_handler("resolution", regex.compile(r"(240|360|480|576|720|1080|2160|3840)[pi]", regex.IGNORECASE), lowercase, {"remove": True})
 
