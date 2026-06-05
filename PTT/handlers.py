@@ -89,6 +89,11 @@ def add_defaults(parser: Parser):
         r"(?i)(?<!\w)The[ .]Office[ .]PL(?!\w)"
     )
 
+    audiobook_after_year_pattern = regex.compile(
+        r"\b(?:19\d{2}|20\d{2}|2100)\b[\s._\-\[\]\(\)\{\}]*audiobook\b",
+        regex.IGNORECASE
+    )
+
     original_parse = parser.parse
 
     def parse_wrapper(raw_title, *args, **kwargs):
@@ -121,6 +126,13 @@ def add_defaults(parser: Parser):
         # "PL" zostało już złapane przez handlery językowe → languages zawiera "pl".
         if office_pl_pattern.search(cleaned):
             result["title"] = "The Office PL"
+
+        # Jeśli bezpośrednio po roku występuje słowo "audiobook",
+        # traktujemy źródło jako nie-wideo i wymuszamy specjalny tytuł.
+        # Przykłady: "Film 2024 Audiobook", "Film (2024) Audiobook",
+        # "Film.2024.Audiobook".
+        if audiobook_after_year_pattern.search(cleaned):
+            result["title"] = "Not a video source"
 
         # 3) wgrywamy site do finalnego wyniku, jeśli mamy je w kontekście
         if "site" in parser.context:
