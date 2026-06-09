@@ -89,6 +89,14 @@ def add_defaults(parser: Parser):
         r"(?i)(?<!\w)The[ .]Office[ .]PL(?!\w)"
     )
 
+    # Globalny wyjątek: jeśli w nazwie występuje tag PLDUB.MD
+    # (separator może być kropką, spacją, myślnikiem, podkreśleniem, nawiasem itd.),
+    # to wynik NIE ma być oznaczony jako język PL, nawet jeśli inne frazy
+    # typu "Dubbing i napisy" / "Polski Dubbing" później złapią PL.
+    pldub_md_pattern = regex.compile(
+        r"(?i)(?<![A-Z0-9])PLDUB(?:[\s._\-|\[\]\(\)\{\}]+)MD(?![A-Z0-9])"
+    )
+
     audiobook_after_year_pattern = regex.compile(
         r"\b(?:19\d{2}|20\d{2}|2100)\b[\s._\-\[\]\(\)\{\}]*audiobook\b",
         regex.IGNORECASE
@@ -133,6 +141,29 @@ def add_defaults(parser: Parser):
         # "Film.2024.Audiobook".
         if audiobook_after_year_pattern.search(cleaned):
             result["title"] = "Not a video source"
+
+        # >>> GLOBALNY WYJĄTEK DLA "PLDUB.MD" <<<
+        # Jeśli taki tag występuje w nazwie, usuwamy "pl" z finalnej listy języków.
+        # Dzięki temu inne polskie frazy w tej samej nazwie nie oznaczą wyniku jako PL.
+        if pldub_md_pattern.search(cleaned):
+            languages = result.get("languages")
+
+            if isinstance(languages, list):
+                languages = [lang for lang in languages if str(lang).lower() != "pl"]
+                if languages:
+                    result["languages"] = languages
+                else:
+                    result.pop("languages", None)
+
+            elif isinstance(languages, tuple):
+                languages = [lang for lang in languages if str(lang).lower() != "pl"]
+                if languages:
+                    result["languages"] = languages
+                else:
+                    result.pop("languages", None)
+
+            elif isinstance(languages, str) and languages.lower() == "pl":
+                result.pop("languages", None)
 
         # 3) wgrywamy site do finalnego wyniku, jeśli mamy je w kontekście
         if "site" in parser.context:
