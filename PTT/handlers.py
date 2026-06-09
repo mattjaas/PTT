@@ -97,6 +97,37 @@ def add_defaults(parser: Parser):
         r"(?i)(?<![A-Z0-9])PLDUB(?:[\s._\-|\[\]\(\)\{\}]+)MD(?![A-Z0-9])"
     )
 
+    def _is_pl_language(lang):
+        if lang is None:
+            return False
+
+        if isinstance(lang, str):
+            return lang.strip().lower() == "pl"
+
+        for attr in ("value", "code", "alpha2", "iso_639_1", "language"):
+            val = getattr(lang, attr, None)
+            if isinstance(val, str) and val.strip().lower() == "pl":
+                return True
+
+        text = str(lang).strip().lower()
+        return text == "pl" or text.endswith(".pl")
+
+    def _remove_pl_language(result):
+        languages = result.get("languages")
+        if languages is None:
+            return
+
+        if isinstance(languages, (list, tuple, set)):
+            filtered = [lang for lang in languages if not _is_pl_language(lang)]
+            if filtered:
+                result["languages"] = filtered
+            else:
+                result.pop("languages", None)
+            return
+
+        if _is_pl_language(languages):
+            result.pop("languages", None)
+
     audiobook_after_year_pattern = regex.compile(
         r"\b(?:19\d{2}|20\d{2}|2100)\b[\s._\-\[\]\(\)\{\}]*audiobook\b",
         regex.IGNORECASE
@@ -107,6 +138,11 @@ def add_defaults(parser: Parser):
     def parse_wrapper(raw_title, *args, **kwargs):
         if not hasattr(parser, "context"):
             parser.context = {}
+
+        # Zapamiętujemy to PRZED parsowaniem, bo parser może później usuwać fragmenty nazwy.
+        # Przykład: "Film II (2026) PLDUB MD ... / Dubbing PL".
+        pldub_md_found = pldub_md_pattern.search(raw_title) is not None
+
         # --- VERY FIRST THING: strip off the “[site] - ” (or “site - ”)
         pre = handle_site_before_title({"title": raw_title})
         if pre and pre["remove"]:
@@ -115,6 +151,8 @@ def add_defaults(parser: Parser):
             raw_title = raw_title[len(pre["raw_match"]):]
         
         cleaned = regex.sub(r'(?<=[\[\]])\s+', '', raw_title)
+        pldub_md_found = pldub_md_found or (pldub_md_pattern.search(cleaned) is not None)
+
         parser.context["_skip_languages_until_title"] = True
         result = original_parse(cleaned, *args, **kwargs)
 
@@ -142,32 +180,15 @@ def add_defaults(parser: Parser):
         if audiobook_after_year_pattern.search(cleaned):
             result["title"] = "Not a video source"
 
-        # >>> GLOBALNY WYJĄTEK DLA "PLDUB.MD" <<<
-        # Jeśli taki tag występuje w nazwie, usuwamy "pl" z finalnej listy języków.
-        # Dzięki temu inne polskie frazy w tej samej nazwie nie oznaczą wyniku jako PL.
-        if pldub_md_pattern.search(cleaned):
-            languages = result.get("languages")
-
-            if isinstance(languages, list):
-                languages = [lang for lang in languages if str(lang).lower() != "pl"]
-                if languages:
-                    result["languages"] = languages
-                else:
-                    result.pop("languages", None)
-
-            elif isinstance(languages, tuple):
-                languages = [lang for lang in languages if str(lang).lower() != "pl"]
-                if languages:
-                    result["languages"] = languages
-                else:
-                    result.pop("languages", None)
-
-            elif isinstance(languages, str) and languages.lower() == "pl":
-                result.pop("languages", None)
-
         # 3) wgrywamy site do finalnego wyniku, jeśli mamy je w kontekście
         if "site" in parser.context:
             result["site"] = parser.context.pop("site")
+
+        # >>> FINALNY WYJĄTEK DLA "PLDUB.MD" / "PLDUB MD" <<<
+        # Musi być absolutnie na końcu wrappera, bo późniejsze reguły mogą złapać np. "/ Dubbing PL".
+        if pldub_md_found:
+            _remove_pl_language(result)
+
         return result
 
     parser.parse = parse_wrapper
@@ -1330,6 +1351,18 @@ def add_defaults(parser: Parser):
         uniq_concat(value("pl")),
         {"remove": True, "skipIfAlreadyFound": False}
     )
+
+    def handle_pldub_md_language_override(context):
+        # Ten handler jest celowo PO ogólnym handlerze \bPL|pol\b.
+        # Dzięki temu przypadek "... PLDUB MD ... / Dubbing PL" nie zostawi languages=pl.
+        if not pldub_md_pattern.search(context["title"]):
+            return None
+
+        _remove_pl_language(context["result"])
+        context.get("matched", {}).pop("languages", None)
+        return None
+
+    parser.add_handler("languages", handle_pldub_md_language_override, {"skipIfAlreadyFound": False})
 
 
     
