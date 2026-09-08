@@ -151,6 +151,10 @@ def add_defaults(parser: Parser):
             raw_title = raw_title[len(pre["raw_match"]):]
         
         cleaned = regex.sub(r'(?<=[\[\]])\s+', '', raw_title)
+        
+        # "napi" traktuj tak samo jak "napisy"
+        cleaned = regex.sub(r"(?i)\bnapi\b", "napisy", cleaned)
+        
         pldub_md_found = pldub_md_found or (pldub_md_pattern.search(cleaned) is not None)
 
         parser.context["_skip_languages_until_title"] = True
